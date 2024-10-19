@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" href="/images/travix-logo-blue.png" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo with Text -->
+                <div class="flex items-center">
+                    <!-- Link wrapping the logo and text to redirect to the home page -->
+                    <a href="/" class="flex items-center">
+                        <img src="/images/travix-logo-blue.png" alt="Travix Logo" class="w-10 h-10 object-contain mr-2">
+                        <div class="text-3xl font-bold text-blue-600">
+                            Travix
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Menu for desktop view -->
+                <div class="hidden md:flex space-x-4">
+                    <a href="/flights" class="text-lg font-medium text-gray-700 hover:text-blue-500">Flights</a>
+                    <a href="/hotels" class="text-lg font-medium text-gray-700 hover:text-blue-500">Hotels</a>
+                    <a href="/cars" class="text-lg font-medium text-gray-700 hover:text-blue-500">Cars</a>
+                    <a href="/explore" class="text-lg font-medium text-gray-700 hover:text-blue-500">Explore</a>
+                </div>
+
+                <!-- Login / Signup for mobile and desktop -->
+                <div class="flex items-center space-x-2 md:space-x-4">
+                    <!-- Login/Signup (visible on all views) -->
+                    <a href="/login" class="text-lg font-medium text-blue-600 hover:text-blue-700 hidden md:block">Login</a>
+                    <a href="/signup" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 hidden md:block">Sign Up</a>
+
+                    <!-- Login/Signup buttons for mobile -->
+                    <a href="/login" class="text-lg font-medium text-blue-500 hover:text-blue-700 md:hidden">Login</a>
+                    <a href="/signup" class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 md:hidden">Sign Up</a>
+
+                    <!-- Mobile Menu Icon -->
+                    <button id="mobile-menu-button" class="text-gray-700 focus:outline-none md:hidden">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="md:hidden hidden">
+                <a href="/flights" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Flights</a>
+                <a href="/hotels" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Hotels</a>
+                <a href="/cars" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Cars</a>
+                <a href="/explore" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Explore</a>
+            </div>
+        </div>
+    </nav>
+
+</body>
+</html>

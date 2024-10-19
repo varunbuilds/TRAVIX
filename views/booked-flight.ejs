@@ -1,0 +1,83 @@
+<%- include('partials/header') %>
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-4 text-center text-green-600">Thank You for Booking!</h1>
+    
+    <h2 class="text-2xl font-semibold mb-6 text-center">Your Booking Details</h2>
+
+    <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+        <h3 class="text-xl font-medium border-b pb-2 mb-4">Traveler Information</h3>
+        <p><strong>Name:</strong> <%= travelerInfo.name %></p>
+        <p><strong>Email:</strong> <%= travelerInfo.email %></p>
+        <p><strong>Phone:</strong> <%= travelerInfo.phone %></p>
+        <p><strong>Date of Birth:</strong> <%= travelerInfo.dob %></p>
+        <p><strong>Gender:</strong> <%= travelerInfo.gender %></p>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+        <h3 class="text-xl font-medium border-b pb-2 mb-4">Flight Itinerary</h3>
+
+        <% 
+        function formatDuration(duration) {
+            const regex = /PT(\d+H)?(\d+M)?/;
+            const match = duration.match(regex);
+            const hours = match[1] ? match[1].replace('H', '') : '0';
+            const minutes = match[2] ? match[2].replace('M', '') : '0';
+            return `${hours}h ${minutes}m`;
+        }
+
+        function formatDateTime(dateTimeString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', timeZoneName: 'short' };
+            const date = new Date(dateTimeString);
+            return date.toLocaleString('en-US', options);
+        }
+        %>
+
+        <% if (bookingDetails && bookingDetails.segments && bookingDetails.segments.length > 0) { %>
+            <h4 class="font-semibold mb-4">Flight Segments:</h4>
+
+            <% bookingDetails.segments.forEach((segment, index) => { %>
+                <div class="border-b border-gray-300 pb-4 mb-4">
+                    <p class="text-lg">
+                        <strong>Flight:</strong> 
+                        <% if (segment.carrier && segment.carrier.code && segment.number) { %>
+                            <%= segment.carrier.code %> <%= segment.number %><br>
+                        <% } else if (segment.number) { %>
+                            <%= segment.number %><br>
+                        <% } else { %>
+                            Unknown Flight<br>
+                        <% } %>
+                        
+                        <strong>From:</strong> <%= segment.departure.cityName %> (<%= segment.departure.iataCode %> - <%= segment.departure.airportName %>)<br>
+                        <strong>To:</strong> <%= segment.arrival.cityName %> (<%= segment.arrival.iataCode %> - <%= segment.arrival.airportName %>)<br>
+                        <strong>Departure:</strong> <%= formatDateTime(segment.departure.at) %><br>
+                        <strong>Arrival:</strong> <%= formatDateTime(segment.arrival.at) %><br>
+                        <strong>Duration:</strong> <%= formatDuration(segment.duration) %>
+                    </p>
+
+                    <% if (index < bookingDetails.segments.length - 1) { %>
+                        <p class="mt-2 text-sm text-gray-600"><em>Layover</em></p>
+                    <% } %>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <p>No flight segments available.</p>
+        <% } %>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-xl font-medium border-b pb-2 mb-4">Important Information</h3>
+        <ul class="list-disc ml-5 space-y-2">
+            <li>Check-in opens 3 hours before departure. Please arrive early.</li>
+            <li>Ensure you have all necessary travel documents (passport, visa).</li>
+            <li>Carry-on baggage allowance: 1 bag (max 7kg).</li>
+            <li>For any changes or cancellations, please contact our support.</li>
+        </ul>
+    </div>
+
+    <div class="mt-8 text-center">
+        <a href="/" class="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 text-lg">Back to Home</a>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,11 @@
+{
+    "type": "amadeusOAuth2Token",
+    "username": "varunrewadi.vr005@gmail.com",
+    "application_name": "flights",
+    "client_id": "GL8GfhJ9DdU490ym0cg60yIRJ6yr8Gl7",
+    "token_type": "Bearer",
+    "access_token": "EGNMLl3Spefo9P54m0uuyvduDYBp",
+    "expires_in": 1799,
+    "state": "approved",
+    "scope": ""
+}

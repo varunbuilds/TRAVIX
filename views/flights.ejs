@@ -1,0 +1,183 @@
+<%- include('partials/header') %>
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Page Title -->
+    <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">Search Flights</h1>
+
+    <!-- Flight Search Form -->
+    <form action="/flight-offers" method="GET" class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- Origin Input -->
+            <div class="relative">
+                <label for="origin" class="block text-sm font-medium text-gray-700">Origin</label>
+                <input type="text" id="origin" name="origin" placeholder="e.g., Madrid" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.origin || '' %>">
+                <ul id="origin-suggestions" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto"></ul>
+                <input type="hidden" id="origin-code" name="originCode" value="<%= query.originCode || '' %>">
+            </div>
+
+            <!-- Destination Input -->
+            <div class="relative">
+                <label for="destination" class="block text-sm font-medium text-gray-700">Destination</label>
+                <input type="text" id="destination" name="destination" placeholder="e.g., New York" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.destination || '' %>">
+                <ul id="destination-suggestions" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto"></ul>
+                <input type="hidden" id="destination-code" name="destinationCode" value="<%= query.destinationCode || '' %>">
+            </div>
+
+            <!-- Departure Date -->
+            <div>
+                <label for="departureDate" class="block text-sm font-medium text-gray-700">Departure Date</label>
+                <input type="date" id="departureDate" name="departureDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.departureDate || '' %>">
+            </div>
+
+            
+        </div>
+
+        <!-- Search Button -->
+        <button type="submit" class="mt-6 w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">Search Flights</button>
+    </form>
+
+    <!-- Popular Destinations Carousel -->
+    <section>
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Popular Destinations</h2>
+        <div class="relative w-full h-[38rem] overflow-hidden">
+            <div id="carousel" class="carousel flex w-full h-full transition-transform duration-500 ease-in-out">
+                <!-- Carousel Items -->
+                <% ['paris', 'new-york', 'tokyo', 'dubai', 'sydney', 'london', 'rome', 'berlin'].forEach(city => { %>
+                    <div class="carousel-item relative w-full flex-shrink-0">
+                        <img src="/images/popular-destinations/<%= city %>.jpg" alt="<%= city.charAt(0).toUpperCase() + city.slice(1) %>" class="w-full h-full object-cover">
+                        <div class="absolute bottom-4 left-4 text-white text-3xl font-bold bg-black bg-opacity-50 rounded px-2"><%= city.charAt(0).toUpperCase() + city.slice(1) %></div>
+                    </div>
+                <% }) %>
+            </div>
+
+            <!-- Carousel Navigation -->
+            <button id="prev" class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black text-white p-3 rounded-full hover:bg-gray-700 transition duration-200">&#10094;</button>
+            <button id="next" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black text-white p-3 rounded-full hover:bg-gray-700 transition duration-200">&#10095;</button>
+        </div>
+    </section>
+
+    <!-- Flight Class Comparison Section -->
+    <section class="mt-8">
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Flight Class Comparison</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <% ['economy', 'business', 'first'].forEach(flightClass => { %>
+                <div class="bg-white shadow-lg rounded-lg p-6 transition-transform duration-300 hover:scale-105">
+                    <img src="<%= flightClass %>-class.jpg" alt="<%= flightClass.charAt(0).toUpperCase() + flightClass.slice(1) %> Class" class="w-full h-40 object-cover mb-4 rounded">
+                    <h3 class="text-lg font-bold mb-2"><%= flightClass.charAt(0).toUpperCase() + flightClass.slice(1) %> Class</h3>
+                    <p class="text-gray-600"><%= flightClass === 'economy' ? 'Comfortable seating at an affordable price.' : flightClass === 'business' ? 'Premium services and extra comfort for business travelers.' : 'Luxury experience with top-notch amenities.' %></p>
+                </div>
+            <% }) %>
+        </div>
+    </section>
+
+    <!-- Airline Partners Section -->
+    <section class="mt-8">
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Our Airline Partners</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <% [1, 2, 3, 4].forEach(partner => { %>
+                <div class="bg-white shadow-lg rounded-lg p-6 text-center transition-transform duration-300 hover:scale-105">
+                    <img src="airline<%= partner %>.jpg" alt="Partner <%= partner %>" class="w-full h-28 object-contain mb-2">
+                    <h3 class="text-lg font-bold mt-2">Airline <%= partner %></h3>
+                </div>
+            <% }) %>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="mt-8">
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Frequently Asked Questions</h2>
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <% [
+                { question: "How do I search for flights?", answer: "Simply enter your origin, destination, and travel dates in the search form and click 'Search Flights'." },
+                { question: "What payment methods are accepted?", answer: "We accept all major credit cards, PayPal, and bank transfers." },
+                { question: "Can I cancel or change my booking?", answer: "Yes, you can cancel or change your booking depending on the airline's policies. Please refer to your booking confirmation for details." },
+                { question: "How do I contact customer support?", answer: "You can reach our customer support team via email, phone, or live chat on our website." }
+            ].forEach(faq => { %>
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold"><%= faq.question %></h3>
+                    <p class="text-gray-600"><%= faq.answer %></p>
+                </div>
+            <% }) %>
+        </div>
+    </section>
+</div>
+
+<%- include('partials/footer') %>
+
+
+<script>
+    // Set default departure date to tomorrow
+    window.onload = function() {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1); // Add one day to today's date
+        const year = tomorrow.getFullYear();
+        const month = String(tomorrow.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const day = String(tomorrow.getDate()).padStart(2, '0');
+        const defaultDate = `${year}-${month}-${day}`;
+
+        document.getElementById('departureDate').value = defaultDate; // Set the value of the date input
+    };
+</script>
+<script>
+    // Debounced function for optimized input handling
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    // Fetch suggestions for origin/destination inputs
+    async function fetchSuggestions(inputElement, listId) {
+    const query = inputElement.value;
+    if (query.length === 0) {
+        document.getElementById(listId).innerHTML = '';  
+        return;
+    }
+
+    try {
+        const response = await fetch(`/suggestions?query=${query}`);
+        const data = await response.json();
+
+        const listElement = document.getElementById(listId);
+        listElement.innerHTML = '';
+
+        data.forEach(item => {
+            const listItem = document.createElement('li');
+            listItem.classList.add('px-3', 'py-2', 'hover:bg-gray-100', 'cursor-pointer');
+            listItem.textContent = `${item.city} (${item.code}) - ${item.airport}`;
+            listItem.addEventListener('click', () => {
+                inputElement.value = `${item.city} (${item.code})`;
+                document.getElementById(`${inputElement.id}-code`).value = item.code;
+                listElement.innerHTML = '';
+            });
+            listElement.appendChild(listItem);
+        });
+    } catch (error) {
+        console.error('Error fetching suggestions:', error);
+    }
+}
+    // Attach debounced event listeners to the input fields
+    document.getElementById('origin').addEventListener('input', debounce(event => fetchSuggestions(event.target, 'origin-suggestions'), 300));
+    document.getElementById('destination').addEventListener('input', debounce(event => fetchSuggestions(event.target, 'destination-suggestions'), 300));
+
+    // Carousel navigation
+    let currentSlide = 0;
+    const totalSlides = document.querySelectorAll('.carousel-item').length;
+
+    document.getElementById('next').onclick = () => {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        updateCarousel();
+    };
+    document.getElementById('prev').onclick = () => {
+        currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+        updateCarousel();
+    };
+
+    function updateCarousel() {
+        const carousel = document.getElementById('carousel');
+        const offset = -currentSlide * 100;
+        carousel.style.transform = `translateX(${offset}%)`;
+    }
+</script>

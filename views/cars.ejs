@@ -1,0 +1,130 @@
+<%- include('partials/header') %>
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Page Title -->
+    <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">Search Car Rentals</h1>
+
+    <!-- Car Rental Search Form -->
+    <form action="/car-offers" method="GET" class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <!-- Pickup Location -->
+            <div class="relative">
+                <label for="pickupLocation" class="block text-sm font-medium text-gray-700">Pickup Location</label>
+                <input type="text" id="pickupLocation" name="pickupLocation" placeholder="e.g., Los Angeles" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.pickupLocation || '' %>">
+                <ul id="pickup-location-suggestions" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto"></ul>
+                <input type="hidden" id="pickup-location-code" name="pickupLocationCode" value="<%= query.pickupLocationCode || '' %>">
+            </div>
+
+            <!-- Pickup Date -->
+            <div>
+                <label for="pickupDate" class="block text-sm font-medium text-gray-700">Pickup Date</label>
+                <input type="date" id="pickupDate" name="pickupDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.pickupDate || '' %>">
+            </div>
+
+            <!-- Drop-off Date -->
+            <div>
+                <label for="dropoffDate" class="block text-sm font-medium text-gray-700">Drop-off Date</label>
+                <input type="date" id="dropoffDate" name="dropoffDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.dropoffDate || '' %>">
+            </div>
+
+            <!-- Car Type -->
+            <div>
+                <label for="carType" class="block text-sm font-medium text-gray-700">Car Type</label>
+                <select id="carType" name="carType" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="economy" <%= query.carType === 'economy' ? 'selected' : '' %>>Economy</option>
+                    <option value="compact" <%= query.carType === 'compact' ? 'selected' : '' %>>Compact</option>
+                    <option value="intermediate" <%= query.carType === 'intermediate' ? 'selected' : '' %>>Intermediate</option>
+                    <option value="fullsize" <%= query.carType === 'fullsize' ? 'selected' : '' %>>Fullsize</option>
+                    <option value="suv" <%= query.carType === 'suv' ? 'selected' : '' %>>SUV</option>
+                    <option value="luxury" <%= query.carType === 'luxury' ? 'selected' : '' %>>Luxury</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Search Button -->
+        <button type="submit" class="mt-6 w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">Search Car Rentals</button>
+    </form>
+
+    <!-- Popular Car Rental Destinations Carousel -->
+    <section>
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Popular Car Rental Destinations</h2>
+        <div class="relative w-full h-[38rem] overflow-hidden">
+            <div id="car-carousel" class="carousel flex w-full h-full transition-transform duration-500 ease-in-out">
+                <!-- Carousel Items -->
+                <% ['los-angeles', 'new-york', 'miami', 'chicago', 'san-francisco', 'dallas', 'orlando', 'boston'].forEach(city => { %>
+                    <div class="carousel-item relative w-full flex-shrink-0">
+                        <img src="/images/car-rental-destinations/<%= city %>.jpg" alt="<%= city.charAt(0).toUpperCase() + city.slice(1) %>" class="w-full h-full object-cover">
+                        <div class="absolute bottom-4 left-4 text-white text-3xl font-bold bg-black bg-opacity-50 rounded px-2"><%= city.charAt(0).toUpperCase() + city.slice(1) %></div>
+                    </div>
+                <% }) %>
+            </div>
+
+            <!-- Carousel Navigation -->
+            <button id="car-prev" class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black text-white p-3 rounded-full hover:bg-gray-700 transition duration-200">&#10094;</button>
+            <button id="car-next" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black text-white p-3 rounded-full hover:bg-gray-700 transition duration-200">&#10095;</button>
+        </div>
+    </section>
+
+    <!-- Car Class Comparison Section -->
+    <section class="mt-8">
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Car Class Comparison</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <% ['economy', 'luxury', 'suv'].forEach(carClass => { %>
+                <div class="bg-white shadow-lg rounded-lg p-6 transition-transform duration-300 hover:scale-105">
+                    <img src="/images/<%= carClass %>-class.jpg" alt="<%= carClass.charAt(0).toUpperCase() + carClass.slice(1) %> Class" class="w-full h-40 object-cover mb-4 rounded">
+                    <h3 class="text-lg font-bold mb-2"><%= carClass.charAt(0).toUpperCase() + carClass.slice(1) %> Class</h3>
+                    <p class="text-gray-600"><%= carClass === 'economy' ? 'Affordable small cars for city driving.' : carClass === 'suv' ? 'Spacious and powerful vehicles for off-road adventures.' : 'Premium cars for a luxury experience.' %></p>
+                </div>
+            <% }) %>
+        </div>
+    </section>
+
+    <!-- Car Rental Partners Section -->
+    <section class="mt-8">
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Our Car Rental Partners</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <% [1, 2, 3, 4].forEach(partner => { %>
+                <div class="bg-white shadow-lg rounded-lg p-6 text-center transition-transform duration-300 hover:scale-105">
+                    <img src="/images/car-partner<%= partner %>.jpg" alt="Car Rental Partner <%= partner %>" class="w-full h-28 object-contain mb-2">
+                    <h3 class="text-lg font-bold mt-2">Car Rental Partner <%= partner %></h3>
+                </div>
+            <% }) %>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="mt-8">
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Frequently Asked Questions</h2>
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <% [
+                { question: "How do I search for car rentals?", answer: "Enter the pickup location, dates, and car type, then click 'Search Car Rentals'." },
+                { question: "What payment methods are accepted?", answer: "We accept major credit cards, PayPal, and other popular payment methods." },
+                { question: "Can I cancel or modify my car rental booking?", answer: "This depends on the rental provider. Please check your booking details for more information." },
+                { question: "What is the minimum age for renting a car?", answer: "The minimum age varies by location and provider, but typically ranges from 21 to 25 years." }
+            ].forEach(faq => { %>
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold"><%= faq.question %></h3>
+                    <p class="text-gray-600"><%= faq.answer %></p>
+                </div>
+            <% }) %>
+        </div>
+    </section>
+</div>
+
+<script>
+    let currentCarSlide = 0;
+    const totalCarSlides = document.querySelectorAll('#car-carousel .carousel-item').length;
+
+    document.getElementById('car-next').onclick = () => {
+        currentCarSlide = (currentCarSlide + 1) % totalCarSlides;
+        document.getElementById('car-carousel').style.transform = `translateX(-${currentCarSlide * 100}%)`;
+    };
+
+    document.getElementById('car-prev').onclick = () => {
+        currentCarSlide = (currentCarSlide - 1 + totalCarSlides) % totalCarSlides;
+        document.getElementById('car-carousel').style.transform = `translateX(-${currentCarSlide * 100}%)`;
+    };
+</script>
+
+<%- include('partials/autocomplete') %>
+<%- include('partials/footer') %>

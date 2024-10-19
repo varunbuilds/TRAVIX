@@ -1,0 +1,335 @@
+<%- include('partials/header') %>
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-4">
+        <a href="javascript:history.back()" class="text-blue-600 hover:underline flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to all tickets
+        </a>
+    </div>
+
+    <h1 class="text-3xl font-bold mb-8">Flight Details</h1>
+
+    <% if (flight && flight.itineraries && flight.itineraries.length > 0) { %>
+        <% const itinerary = flight.itineraries[0]; %>
+        <% const segment = itinerary.segments[0]; %>
+
+        <!-- Flight Information Section -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-semibold mb-6">Flight Information</h2>
+
+            <div class="grid grid-cols-2 gap-6 mb-4">
+                <div>
+                    <h3 class="text-lg font-medium">Departure</h3>
+                    <p><%= segment.departure.cityName %> (<%= segment.departure.iataCode %>) - <%= segment.departure.airportName %></p>
+                    <p>Terminal: <%= segment.departure.terminal || 'N/A' %></p>
+                    <p class="text-gray-600">At: <%= new Date(segment.departure.at).toLocaleString() %></p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium">Arrival</h3>
+                    <p><%= segment.arrival.cityName %> (<%= segment.arrival.iataCode %>) - <%= segment.arrival.airportName %></p>
+                    <p>Terminal: <%= segment.arrival.terminal || 'N/A' %></p>
+                    <p class="text-gray-600">At: <%= new Date(segment.arrival.at).toLocaleString() %></p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6 mb-4">
+                <div>
+                    <h3 class="text-lg font-medium">Airline</h3>
+                    <p><%= segment.airlineName %></p> <!-- Display airline name here -->
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium">Flight Number</h3>
+                    <p><%= segment.number %></p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium">Flight Duration</h3>
+                    <p><%= segment.duration.replace("PT", "").replace("H", " hours ").replace("M", " minutes") %></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Information Section -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-semibold mb-6">Pricing Details</h2>
+            <div class="grid grid-cols-2 gap-6 mb-4">
+                <div>
+                    <h3 class="text-lg font-medium">Total Price</h3>
+                    <p class="text-green-600 font-bold text-2xl"><%= flight.price.grandTotal %> USD</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium">Base Price</h3>
+                    <p><%= flight.price.base %> USD</p>
+                </div>
+            </div>
+            <div class="mb-4">
+                <h3 class="text-lg font-medium">Price Breakdown</h3>
+                <ul class="list-disc ml-5 text-gray-700">
+                    <% 
+                        let totalTaxes = 0;
+                        flight.travelerPricings.forEach(traveler => {
+                            traveler.price.taxes.forEach(tax => {
+                                totalTaxes += parseFloat(tax.amount);
+                            });
+                        });
+                    %>
+                    <li><strong>Taxes:</strong> <%= totalTaxes.toFixed(2) %> USD</li>
+                    <% if (flight.price.fees && flight.price.fees.length > 0) { %>
+                        <% flight.price.fees.forEach(fee => { %>
+                            <li><strong><%= fee.type %> Fee:</strong> <%= fee.amount %> USD</li>
+                        <% }); %>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Traveler Pricing Section -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-semibold mb-6">Traveler Information</h2>
+            <div class="grid grid-cols-2 gap-6">
+                <% flight.travelerPricings.forEach((traveler, index) => { %>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h3 class="text-lg font-medium mb-2">
+                            Traveler Type: <%= traveler.travelerType.charAt(0).toUpperCase() + traveler.travelerType.slice(1).toLowerCase() %>
+                        </h3>
+                        <p class="mb-2">Fare Option: <%= traveler.fareOption.charAt(0).toUpperCase() + traveler.fareOption.slice(1).toLowerCase() %></p>
+                        <p class="text-green-600 font-bold text-xl mb-2">Total Price: <%= traveler.price.total %> USD</p>
+
+                        <h4 class="text-md font-medium mt-4">Price Breakdown:</h4>
+                        <ul class="list-disc ml-5 text-gray-700">
+                            <li>Base Price: <%= traveler.price.base %> USD</li>
+                            <% traveler.price.taxes.forEach(tax => { %>
+                                <li>
+                                    <% 
+                                        const taxDescriptions = {
+                                            'P2': 'Passenger Service Charge',
+                                            'YM': 'Security Fee',
+                                            'K3': 'Carrier Imposed International Surcharge',
+                                            'YR': 'Fuel Surcharge',
+                                            'XY': 'Airport Development Fee', 
+                                            'IN': 'International Surcharge',   
+                                            'YQ': 'Carrier Imposed International Surcharge', 
+                                            'XA': 'Additional Fee',            
+                                            'YC': 'Customs Fee',               
+                                            'US': 'US Transportation Tax'       
+                                        };
+
+                                        const taxDescription = taxDescriptions[tax.code] || tax.code;
+                                    %>
+                                    <%= taxDescription %>: <%= tax.amount %> USD
+                                </li>
+                            <% }) %>
+                            <li><strong>Total Taxes:</strong> <%= traveler.price.taxes.reduce((total, tax) => total + parseFloat(tax.amount), 0).toFixed(2) %> USD</li>
+                        </ul>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+
+        <!-- Traveler Details Section -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-semibold mb-6">Traveler Details</h2>
+        <form id="booking-form" method="POST" action="/confirm-booking" class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <input type="hidden" name="offerId" value="<%= flight.id %>">
+            <input type="hidden" name="originCode" value="<%= segment.departure.iataCode %>">
+            <input type="hidden" name="destinationCode" value="<%= segment.arrival.iataCode %>">
+            <input type="hidden" name="departureDate" value="<%= segment.departure.at.split('T')[0] %>">
+            
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <label for="travelerName" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" id="travelerName" name="travelerName" required 
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2 transition duration-200 ease-in-out" />
+                </div>
+                <div>
+                    <label for="travelerEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="travelerEmail" name="travelerEmail" required 
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2 transition duration-200 ease-in-out" />
+                </div>
+                <div>
+                    <label for="travelerPhone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="tel" id="travelerPhone" name="travelerPhone" required 
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2 transition duration-200 ease-in-out" />
+                </div>
+                <div>
+                    <label for="travelerDOB" class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                    <input type="date" id="travelerDOB" name="travelerDOB" required 
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2 transition duration-200 ease-in-out" />
+                </div>
+                <div>
+                    <label for="travelerGender" class="block text-sm font-medium text-gray-700">Gender</label>
+                    <select id="travelerGender" name="travelerGender" required 
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2 transition duration-200 ease-in-out">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="numberOfTravelers" class="block text-sm font-medium text-gray-700">Number of Travelers</label>
+                    <input type="number" id="numberOfTravelers" name="numberOfTravelers" min="1" value="1" 
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2 transition duration-200 ease-in-out" />
+                </div>
+                
+                <!-- Total Price Display -->
+                <div id="totalPriceContainer" class="mt-4">
+                    <h3 class="text-lg font-medium">Total Price for <span id="travelerCount">1</span> Traveler(s):</h3>
+                    <p id="totalPrice" class="text-green-600 font-bold text-2xl"><%= flight.price.grandTotal %> USD</p>
+                </div>
+ <!-- Checkout Section -->
+                <div class="mt-8 bg-gray-100 p-6 rounded-lg shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4">Checkout</h2>
+                    <label for="paymentMethod" class="block text-sm font-medium text-gray-700">Select Payment Method:</label>
+                    <select id="paymentMethod" name="paymentMethod" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2 transition duration-200 ease-in-out">
+                        <option value="credit-card">Credit Card</option>
+                        <option value="paypal">PayPal</option>
+                        <option value="bank-transfer">Bank Transfer</option>
+                    </select>
+
+                    <!-- Credit Card Section -->
+                    <div id="credit-card-section" class="mt-6">
+                        <h3 class="text-lg font-medium mb-4">Credit Card Details</h3>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label for="cardNumber" class="block text-sm font-medium text-gray-700">Card Number</label>
+                                <input type="text" id="cardNumber" name="cardNumber" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2" />
+                            </div>
+                            <div>
+                                <label for="expiryDate" class="block text-sm font-medium text-gray-700">Expiry Date</label>
+                                <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2" />
+                            </div>
+                            <div>
+                                <label for="cvv" class="block text-sm font-medium text-gray-700">CVV</label>
+                                <input type="text" id="cvv" name="cvv" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2" />
+                            </div>
+                            <div>
+                                <label for="nameOnCard" class="block text-sm font-medium text-gray-700">Name on Card</label>
+                                <input type="text" id="nameOnCard" name="nameOnCard" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PayPal Section -->
+                    <div id="paypal-section" class="mt-6 hidden">
+                        <h3 class="text-lg font-medium mb-4">Pay with PayPal</h3>
+                        <p class="text-gray-600">You will be redirected to PayPal to complete your purchase.</p>
+                    </div>
+
+                    <!-- Bank Transfer Section -->
+                    <div id="bank-transfer-section" class="mt-6 hidden">
+                        <h3 class="text-lg font-medium mb-4">Bank Transfer Details</h3>
+                        <p class="text-gray-600">Bank Name: ABC Bank</p>
+                        <p class="text-gray-600">Account Number: 123456789</p>
+                        <p class="text-gray-600">Routing Number: 987654321</p>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="mt-6 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Confirm Booking
+            </button>
+        </form>
+    </div>
+
+    <% } else { %>
+        <p class="text-red-600">No flight details available.</p>
+    <% } %>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const paymentMethodSelect = document.getElementById('paymentMethod');
+        const creditCardSection = document.getElementById('credit-card-section');
+        const paypalSection = document.getElementById('paypal-section');
+        const bankTransferSection = document.getElementById('bank-transfer-section');
+
+        paymentMethodSelect.addEventListener('change', function () {
+            const selectedMethod = paymentMethodSelect.value;
+
+            // Hide all sections
+            creditCardSection.classList.add('hidden');
+            paypalSection.classList.add('hidden');
+            bankTransferSection.classList.add('hidden');
+
+            // Show the selected section
+            if (selectedMethod === 'credit-card') {
+                creditCardSection.classList.remove('hidden');
+            } else if (selectedMethod === 'paypal') {
+                paypalSection.classList.remove('hidden');
+            } else if (selectedMethod === 'bank-transfer') {
+                bankTransferSection.classList.remove('hidden');
+            }
+        });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const numberOfTravelersInput = document.getElementById('numberOfTravelers');
+        const totalPriceDisplay = document.getElementById('totalPrice');
+        const travelerCountDisplay = document.getElementById('travelerCount');
+
+        numberOfTravelersInput.addEventListener('input', function () {
+            const numberOfTravelers = parseInt(numberOfTravelersInput.value) || 1; // Ensure at least 1
+            travelerCountDisplay.textContent = numberOfTravelers;
+
+            // Calculate new total price
+            const totalPrice = parseFloat("<%= flight.price.grandTotal%>");
+            const newTotalPrice = totalPrice * numberOfTravelers;
+            totalPriceDisplay.textContent = `${newTotalPrice.toFixed(2)} USD`;
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const bookingForm = document.getElementById('booking-form');
+
+        if (!bookingForm) {
+            console.error('Booking form not found!');
+            return;
+        }
+
+        bookingForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            // Get all form data
+            const formData = new FormData(bookingForm);
+            const bookingData = Object.fromEntries(formData.entries());
+
+            // Make a POST request to book the flight and get the booking ID
+            fetch('/confirm-booking', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(bookingData) // Send all form data
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    console.error(data.error); // Log the error response from the server
+                    alert(data.error); // Alert the user
+                    return;
+                }
+                
+                // Redirect to booked flight page with the bookingId
+                if (data.redirect) {
+                    window.location.href = data.redirect; // Use the redirect URL from the server
+                }
+            })
+            .catch(error => {
+                console.error('Error during the fetch operation:', error);
+                alert('An error occurred. Please try again later.');
+            });
+        });
+    });
+</script>

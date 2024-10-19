@@ -1,0 +1,19 @@
+<%- include('partials/header') %>
+
+    <div class="container mx-auto py-12">
+        <h1 class="text-3xl font-bold text-center mb-8">Hotel Offers</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <% hotels.forEach(hotel => { %>
+                <div class="bg-white p-6 rounded shadow">
+                    <h2 class="text-xl font-semibold mb-4"><%= hotel.hotel.name %></h2>
+                    <p class="text-gray-700"><%= hotel.hotel.address.lines.join(', ') %></p>
+                    <p class="text-gray-500">City: <%= hotel.hotel.address.cityName %></p>
+                    <p class="text-gray-500">Price: <%= hotel.offers[0].price.total %> <%= hotel.offers[0].price.currency %></p>
+                    <a href="#" class="block mt-4 px-4 py-2 bg-blue-500 text-white text-center rounded">Book Now</a>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>
