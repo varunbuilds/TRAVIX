@@ -1,2 +1,0 @@
-# TRAVIX
-Travel Booking Website
