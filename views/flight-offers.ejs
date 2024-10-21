@@ -31,50 +31,9 @@
 </form>
 
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-    <!-- Filters Panel -->
-    <div class="bg-white shadow-lg rounded-lg p-6 col-span-1">
-        <h2 class="text-lg font-bold mb-4">Filters</h2>
-
-        <!-- Price Filter -->
-        <div class="mb-4">
-            <h3 class="font-semibold text-gray-700">Price</h3>
-            <input type="range" id="price-range" name="priceRange" min="50" max="5000" step="50" value="5000" class="w-full mt-2">
-            <p class="text-sm text-gray-600 mt-1">Up to $<span id="price-value">5000</span></p>
-        </div>
-
-        <!-- Airlines Filter -->
-        <div class="mb-4">
-            <h3 class="font-semibold text-gray-700">Airlines</h3>
-            <% airlines.forEach(airline => { %>
-                <div class="flex items-center mb-2">
-                    <input type="checkbox" id="<%= airline.code %>" name="airlines[]" value="<%= airline.code %>" class="h-4 w-4 text-blue-600 border-gray-300 rounded">
-                    <label for="<%= airline.code %>" class="ml-2 text-sm text-gray-700"><%= airline.name %></label>
-                </div>
-            <% }) %>
-        </div>
-
-        <!-- Stops Filter -->
-        <div class="mb-4">
-            <h3 class="font-semibold text-gray-700">Number of Stops</h3>
-            <div class="flex items-center mb-2">
-                <input type="radio" id="non-stop" name="stops" value="0" class="h-4 w-4 text-blue-600 border-gray-300 rounded">
-                <label for="non-stop" class="ml-2 text-sm text-gray-700">Non-stop</label>
-            </div>
-            <div class="flex items-center mb-2">
-                <input type="radio" id="one-stop" name="stops" value="1" class="h-4 w-4 text-blue-600 border-gray-300 rounded">
-                <label for="one-stop" class="ml-2 text-sm text-gray-700">1 Stop</label>
-            </div>
-            <div class="flex items-center">
-                <input type="radio" id="two-plus-stops" name="stops" value="2+" class="h-4 w-4 text-blue-600 border-gray-300 rounded">
-                <label for="two-plus-stops" class="ml-2 text-sm text-gray-700">2+ Stops</label>
-            </div>
-        </div>
-
-    </div>
 
     <!-- Flight Results Section -->
-    <div class="col-span-3">
-        <!-- The existing flight results code here -->
+    <div class="col-span-4">
          <!-- Flight results -->
     <% if (flights && flights.length > 0) { %>
         <h2 class="text-2xl font-semibold text-gray-900 mb-4">Available Flights</h2>

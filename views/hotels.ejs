@@ -6,48 +6,39 @@
 
     <!-- Hotel Search Form -->
     <form action="/hotel-offers" method="GET" class="bg-white shadow-md rounded-lg p-6 mb-8">
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <!-- City Input -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <div class="relative">
-                <label for="city" class="block text-sm font-medium text-gray-700">City</label>
-                <input type="text" id="city" name="city" placeholder="e.g., New York" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.city || '' %>">
-                <ul id="city-suggestions" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto"></ul>
-                <input type="hidden" id="city-code" name="cityCode" value="<%= query.cityCode || '' %>">
+                <label for="searchQuery" class="block text-sm font-medium text-gray-700">City or Hotel</label>
+                <input type="text" id="searchQuery" name="searchQuery" placeholder="e.g., New York or Ritz" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <ul id="suggestions-list" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto"></ul>
+                <input type="hidden" id="cityCode" name="cityCode">
+                <input type="hidden" id="hotelName" name="hotelName">
             </div>
 
-            <!-- Check-in Date -->
             <div>
                 <label for="checkInDate" class="block text-sm font-medium text-gray-700">Check-in Date</label>
-                <input type="date" id="checkInDate" name="checkInDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.checkInDate || '' %>">
+                <input type="date" id="checkInDate" name="checkInDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
-            <!-- Check-out Date -->
             <div>
                 <label for="checkOutDate" class="block text-sm font-medium text-gray-700">Check-out Date</label>
-                <input type="date" id="checkOutDate" name="checkOutDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.checkOutDate || '' %>">
-            </div>
-
-            <!-- Guests Selection -->
-            <div>
-                <label for="guests" class="block text-sm font-medium text-gray-700">Guests</label>
-                <input type="number" id="guests" name="guests" value="<%= query.guests || 1 %>" min="1" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="checkOutDate" name="checkOutDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
         </div>
 
-        <!-- Search Button -->
         <button type="submit" class="mt-6 w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">Search Hotels</button>
     </form>
 
-    <!-- Popular Destinations Carousel -->
+    <!-- Popular Hotels -->
     <section>
-        <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Popular Hotel Destinations</h2>
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Popular Hotel Properties</h2>
         <div class="relative w-full h-[38rem] overflow-hidden">
             <div id="hotel-carousel" class="carousel flex w-full h-full transition-transform duration-500 ease-in-out">
                 <!-- Carousel Items -->
-                <% ['new-york', 'paris', 'tokyo', 'dubai', 'london', 'barcelona', 'rome', 'singapore'].forEach(city => { %>
+                <% ['villa-d-este', 'ritz-paris', 'aman-tokyo', 'burj-al-arab', 'claridge-london', 'soho-house-barcelona', 'hotel-de-russie', 'raffles-singapore'].forEach(property => { %>
                     <div class="carousel-item relative w-full flex-shrink-0">
-                        <img src="/images/hotel-destinations/<%= city %>.jpg" alt="<%= city.charAt(0).toUpperCase() + city.slice(1) %>" class="w-full h-full object-cover">
-                        <div class="absolute bottom-4 left-4 text-white text-3xl font-bold bg-black bg-opacity-50 rounded px-2"><%= city.charAt(0).toUpperCase() + city.slice(1) %></div>
+                        <img src="/images/hotel-properties/<%= property %>.jpg" alt="<%= property.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') %>" class="w-full h-full object-cover">
+                        <div class="absolute bottom-4 left-4 text-white text-3xl font-bold bg-black bg-opacity-50 rounded px-2"><%= property.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') %></div>
                     </div>
                 <% }) %>
             </div>
@@ -106,7 +97,7 @@
 
 <%- include('partials/footer') %>
 
-
+<!-- Carousel Script -->
 <script>
     // Set default check-in date to tomorrow
     window.onload = function() {
@@ -123,16 +114,85 @@
 <script>
     // Carousel navigation for hotels
     let currentHotelSlide = 0;
-    const totalHotelSlides = document.querySelectorAll('.carousel-item').length;
+    const hotelSlides = document.querySelectorAll('.carousel-item');
+    const totalHotelSlides = hotelSlides.length;
 
     document.getElementById('hotel-next').onclick = () => {
         currentHotelSlide = (currentHotelSlide + 1) % totalHotelSlides;
-        document.getElementById('hotel-carousel').style.transform = `translateX(-${currentHotelSlide * 100}%)`;
+        updateCarousel();
     };
 
     document.getElementById('hotel-prev').onclick = () => {
         currentHotelSlide = (currentHotelSlide - 1 + totalHotelSlides) % totalHotelSlides;
-        document.getElementById('hotel-carousel').style.transform = `translateX(-${currentHotelSlide * 100}%)`;
+        updateCarousel();
     };
+
+    function updateCarousel() {
+        const offset = currentHotelSlide * -100;
+        document.getElementById('hotel-carousel').style.transform = `translateX(${offset}%)`;
+    }
+
+    // Auto-slide functionality
+    setInterval(() => {
+        currentHotelSlide = (currentHotelSlide + 1) % totalHotelSlides;
+        updateCarousel();
+    }, 4000); // Change slide every 4 seconds
 </script>
 
+<script>
+    const searchQueryInput = document.getElementById('searchQuery');
+    const suggestionsList = document.getElementById('suggestions-list');
+    const cityCodeInput = document.getElementById('cityCode');
+    const hotelNameInput = document.getElementById('hotelName');
+
+    searchQueryInput.addEventListener('input', async () => {
+        const query = searchQueryInput.value.trim();
+        if (query.length < 3) {
+            suggestionsList.innerHTML = '';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/hotel-suggestions?query=${encodeURIComponent(query)}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const suggestions = await response.json();
+            const uniqueSuggestions = [...new Set(suggestions.map(s => s.name))]; // Remove duplicates
+            suggestionsList.innerHTML = '';
+
+            uniqueSuggestions.forEach(suggestion => {
+                const listItem = document.createElement('li');
+                listItem.textContent = suggestion;
+                listItem.classList.add('cursor-pointer', 'hover:bg-gray-200', 'p-2', 'suggestion-item');
+
+                listItem.addEventListener('click', () => {
+                    searchQueryInput.value = suggestion;
+                    const selectedSuggestion = suggestions.find(s => s.name === suggestion);
+                    if (selectedSuggestion) {
+                        if (selectedSuggestion.code.startsWith('H')) {
+                            hotelNameInput.value = selectedSuggestion.name;
+                            cityCodeInput.value = '';
+                        } else {
+                            cityCodeInput.value = selectedSuggestion.code;
+                            hotelNameInput.value = '';
+                        }
+                    }
+                    // Clear suggestions after selection
+                    suggestionsList.innerHTML = ''; // Ensure suggestions are cleared after any selection
+                });
+
+                suggestionsList.appendChild(listItem);
+            });
+        } catch (error) {
+            console.error('Error fetching suggestions:', error);
+        }
+    });
+
+    // Optional: Hide suggestions when clicking outside
+document.addEventListener('click', (event) => {
+    if (!searchQueryInput.contains(event.target) && !suggestionsList.contains(event.target)) {
+        suggestionsList.innerHTML = ''; // Clear suggestions
+    }
+});
+</script>

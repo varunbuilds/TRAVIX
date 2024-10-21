@@ -484,64 +484,139 @@ app.get('/hotels', (req, res) => {
     res.render('hotels', { title: 'Search Hotels', query: req.query });
 });
 
-// Fetch Hotel Offers
 app.get('/hotel-offers', async (req, res) => {
-    const { cityCode, checkInDate, checkOutDate, adults } = req.query;
+    const { searchQuery, checkInDate, checkOutDate, adults } = req.query;
 
-    const hotelUrl = `https://test.api.amadeus.com/v2/shopping/hotel-offers`;
+    // Validate the parameters
+    if (!checkInDate || !checkOutDate) {
+        return res.status(400).send('Check-in and check-out dates are required.');
+    }
 
-    try {
-        const response = await axios.get(hotelUrl, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            },
-            params: {
-                cityCode,
-                checkInDate,
-                checkOutDate,
-                adults: adults || 1
+    // Prepare the request parameters
+    const params = {
+        checkInDate,
+        checkOutDate,
+        adults: adults || 1,
+        roomQuantity: 1
+    };
+
+    if (searchQuery) {
+        const cityUrl = `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city`;
+        const hotelUrl = `https://test.api.amadeus.com/v3/shopping/hotel-offers`;
+
+        try {
+            // First, attempt to fetch hotels by city
+            const cityResponse = await axios.get(cityUrl, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                },
+                params: {
+                    cityCode: searchQuery // Using the city code provided by the user
+                }
+            });
+
+            const hotelsInCity = cityResponse.data.data;
+
+            if (hotelsInCity && hotelsInCity.length) {
+                // If hotels were found in the city, prepare to fetch offers for those hotels
+                const hotelIds = hotelsInCity.map(hotel => hotel.hotelId).join(',');
+                
+                // Now fetch hotel offers for the retrieved hotel IDs
+                const offersResponse = await axios.get(hotelUrl, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    },
+                    params: {
+                        hotelIds: hotelIds,
+                        ...params
+                    }
+                });
+
+                return res.render('hotel-offers', {
+                    title: 'Hotel Offers',
+                    hotels: offersResponse.data.data,
+                    query: req.query
+                });
+            } else {
+                // No hotels found by city, now search by hotel name
+                const hotelResponse = await axios.get(hotelUrl, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    },
+                    params: {
+                        hotelIds: searchQuery, // Assuming searchQuery contains a valid hotel ID
+                        ...params
+                    }
+                });
+
+                const hotelDataByName = hotelResponse.data;
+
+                return res.render('hotel-offers', {
+                    title: 'Hotel Offers',
+                    hotels: hotelDataByName.data,
+                    query: req.query
+                });
             }
-        });
-
-        const hotelData = response.data;
-
-        res.render('hotel-offers', { 
-            title: 'Hotel Offers', 
-            hotels: hotelData.data, 
-            query: req.query 
-        });
-    } catch (error) {
-        console.error('Error fetching hotel offers:', error.response ? error.response.data : error.message);
-        res.status(500).send('Error fetching hotel offers');
+        } catch (error) {
+            console.error('Error fetching hotel offers:', error.message);
+            return res.status(500).send('Error fetching hotel offers');
+        }
+    } else {
+        return res.status(400).send('Search query is required.');
     }
 });
 
-// Suggestions Route for Autocomplete (City and Hotel Names)
+
+
+// Autocomplete Suggestions Route (for city and hotel names)
 app.get('/hotel-suggestions', async (req, res) => {
     const query = req.query.query;
 
     try {
-        const response = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations', {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            },
-            params: {
-                keyword: query,
-                subType: 'CITY,HOTEL'
-            }
-        });
+        let hotelSuggestions = [];
+        let citySuggestions = [];
 
-        const suggestions = response.data.data.map(item => ({
-            name: item.name,
-            iataCode: item.iataCode
-        }));
+        if (query.length >= 3) {
+            // Fetch hotel suggestions
+            const hotelResponse = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations/hotel', {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                },
+                params: {
+                    keyword: query,
+                    subType: 'HOTEL_LEISURE'
+                }
+            });
+            hotelSuggestions = hotelResponse.data.data.map(item => ({
+                name: item.name,
+                code: item.hotelId
+            }));
 
+            // Fetch city suggestions
+            const cityResponse = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations', {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                },
+                params: {
+                    keyword: query,
+                    subType: 'CITY'
+                }
+            });
+            citySuggestions = cityResponse.data.data.map(item => ({
+                name: item.name,
+                code: item.iataCode
+            }));
+        }
+
+        // Combine suggestions and send response
+        const suggestions = [...citySuggestions, ...hotelSuggestions];
         res.json(suggestions);
     } catch (error) {
-        console.error('Error fetching hotel suggestions:', error.message);
-        res.status(500).send('Error fetching hotel suggestions');
+        console.error('Error fetching suggestions:', error.message);
+        res.status(500).send('Error fetching suggestions');
     }
 });
+
 
 
 // Start the server
