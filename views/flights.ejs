@@ -163,21 +163,38 @@
     document.getElementById('destination').addEventListener('input', debounce(event => fetchSuggestions(event.target, 'destination-suggestions'), 300));
 
     // Carousel navigation
-    let currentSlide = 0;
-    const totalSlides = document.querySelectorAll('.carousel-item').length;
+        let currentSlide = 0;
+        const totalSlides = document.querySelectorAll('.carousel-item').length;
+        const intervalTime = 3000; // 3 seconds for each slide
 
-    document.getElementById('next').onclick = () => {
-        currentSlide = (currentSlide + 1) % totalSlides;
-        updateCarousel();
-    };
-    document.getElementById('prev').onclick = () => {
-        currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
-        updateCarousel();
-    };
+        // Function to move to the next slide
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            updateCarousel();
+        }
 
-    function updateCarousel() {
-        const carousel = document.getElementById('carousel');
-        const offset = -currentSlide * 100;
-        carousel.style.transform = `translateX(${offset}%)`;
-    }
+        // Update carousel position based on current slide
+        function updateCarousel() {
+            const carousel = document.getElementById('carousel');
+            const offset = -currentSlide * 100;
+            carousel.style.transform = `translateX(${offset}%)`;
+        }
+
+        // Set up automatic sliding
+        let autoSlide = setInterval(nextSlide, intervalTime);
+
+        // Pause the automatic sliding when the user interacts with the navigation buttons
+        document.getElementById('next').onclick = () => {
+            clearInterval(autoSlide);
+            nextSlide();
+            autoSlide = setInterval(nextSlide, intervalTime); // Restart auto-slide after interaction
+        };
+
+        document.getElementById('prev').onclick = () => {
+            clearInterval(autoSlide);
+            currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+            updateCarousel();
+            autoSlide = setInterval(nextSlide, intervalTime); // Restart auto-slide after interaction
+        };
+
 </script>
