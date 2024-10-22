@@ -167,20 +167,21 @@
                 listItem.classList.add('cursor-pointer', 'hover:bg-gray-200', 'p-2', 'suggestion-item');
 
                 listItem.addEventListener('click', () => {
-                    searchQueryInput.value = suggestion;
-                    const selectedSuggestion = suggestions.find(s => s.name === suggestion);
-                    if (selectedSuggestion) {
-                        if (selectedSuggestion.code.startsWith('H')) {
-                            hotelNameInput.value = selectedSuggestion.name;
-                            cityCodeInput.value = '';
-                        } else {
-                            cityCodeInput.value = selectedSuggestion.code;
-                            hotelNameInput.value = '';
-                        }
+                searchQueryInput.value = suggestion;
+                const selectedSuggestion = suggestions.find(s => s.name === suggestion);
+                if (selectedSuggestion) {
+                    if (selectedSuggestion.type === 'hotel') { // Use type to distinguish between hotel and city
+                        hotelNameInput.value = selectedSuggestion.name;
+                        cityCodeInput.value = '';
+                    } else if (selectedSuggestion.type === 'city') {
+                        cityCodeInput.value = selectedSuggestion.code;
+                        hotelNameInput.value = '';
                     }
-                    // Clear suggestions after selection
-                    suggestionsList.innerHTML = ''; // Ensure suggestions are cleared after any selection
-                });
+                }
+                // Clear suggestions after selection for both cases
+                suggestionsList.innerHTML = ''; 
+            });
+
 
                 suggestionsList.appendChild(listItem);
             });
