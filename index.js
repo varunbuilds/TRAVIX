@@ -484,113 +484,81 @@ app.get('/hotels', (req, res) => {
     res.render('hotels', { title: 'Search Hotels', query: req.query });
 });
 
+// Route for fetching hotel offers by city
 app.get('/hotel-offers', async (req, res) => {
     const { searchQuery, checkInDate, checkOutDate, adults } = req.query;
 
-    // Validate the parameters
-    if (!checkInDate || !checkOutDate) {
-        return res.status(400).send('Check-in and check-out dates are required.');
+    console.log('Hotel search query:', searchQuery);
+    console.log('Check-in date:', checkInDate);
+    console.log('Check-out date:', checkOutDate);
+
+    if (!checkInDate || !checkOutDate || !searchQuery) {
+        console.log('Missing required parameters.');
+        return res.status(400).send('Check-in and check-out dates, and a city name are required.');
     }
 
-    // Prepare the request parameters
-    const params = {
-        checkInDate,
-        checkOutDate,
-        adults: adults || 1,
-        roomQuantity: 1
-    };
-
-    if (searchQuery) {
-        const cityUrl = `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city`;
-        const hotelUrl = `https://test.api.amadeus.com/v3/shopping/hotel-offers`;
-
-        try {
-            // First, attempt to fetch hotels by city
-            const cityResponse = await axios.get(cityUrl, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                },
-                params: {
-                    cityCode: searchQuery // Using the city code provided by the user
-                }
-            });
-
-            const hotelsInCity = cityResponse.data.data;
-
-            if (hotelsInCity && hotelsInCity.length) {
-                // If hotels were found in the city, prepare to fetch offers for those hotels
-                const hotelIds = hotelsInCity.map(hotel => hotel.hotelId).join(',');
-                
-                // Now fetch hotel offers for the retrieved hotel IDs
-                const offersResponse = await axios.get(hotelUrl, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    },
-                    params: {
-                        hotelIds: hotelIds,
-                        ...params
-                    }
-                });
-
-                return res.render('hotel-offers', {
-                    title: 'Hotel Offers',
-                    hotels: offersResponse.data.data,
-                    query: req.query
-                });
-            } else {
-                // No hotels found by city, now search by hotel name
-                const hotelResponse = await axios.get(hotelUrl, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    },
-                    params: {
-                        hotelIds: searchQuery, // Assuming searchQuery contains a valid hotel ID
-                        ...params
-                    }
-                });
-
-                const hotelDataByName = hotelResponse.data;
-
-                return res.render('hotel-offers', {
-                    title: 'Hotel Offers',
-                    hotels: hotelDataByName.data,
-                    query: req.query
-                });
+    try {
+        // Fetch the city IATA code using the Amadeus Locations API
+        const cityResponse = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations', {
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            },
+            params: {
+                keyword: searchQuery,
+                subType: 'CITY'
             }
-        } catch (error) {
-            console.error('Error fetching hotel offers:', error.message);
-            return res.status(500).send('Error fetching hotel offers');
+        });
+
+        // Ensure city data is returned and exists
+        const cityData = cityResponse.data.data[0];
+        if (!cityData || !cityData.iataCode) {
+            return res.status(404).send('City not found.');
         }
-    } else {
-        return res.status(400).send('Search query is required.');
+
+        const cityCode = cityData.iataCode;
+        console.log('Fetched city code:', cityCode);
+
+        // Call Amadeus "Hotel Offers by City" API
+        const hotelUrl = `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${cityCode}`;
+
+        console.log('Fetching hotels for city code:', cityCode);
+        console.log(hotelUrl);
+
+        const offersResponse = await axios.get(hotelUrl, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+
+        
+        console.log('Hotels response:', offersResponse.data);
+
+        // Ensure the API returned hotel data
+        if (!offersResponse.data.data || offersResponse.data.data.length === 0) {
+            return res.status(404).send('No hotels found for the provided city.');
+        }
+
+        // Render the hotel-offers.ejs template with the hotel data
+        return res.render('hotel-offers', {
+            title: 'Hotel Offers',
+            hotels: offersResponse.data.data,
+            query: req.query // Pass the original query for possible use in the view
+        });
+    } catch (error) {
+        console.error('Error fetching hotels:', error.response ? error.response.data : error.message);
+        if (error.response && error.response.status === 400) {
+            return res.status(400).send('Bad request: please check your parameters.');
+        }
+        return res.status(500).send('Error fetching hotels.');
     }
 });
 
-
-
-// Autocomplete Suggestions Route (for city and hotel names)
+// Autocomplete Suggestions Route (for city names)
 app.get('/hotel-suggestions', async (req, res) => {
     const query = req.query.query;
 
     try {
-        let hotelSuggestions = [];
         let citySuggestions = [];
 
         if (query.length >= 3) {
-            // Fetch hotel suggestions
-            const hotelResponse = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations/hotel', {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                },
-                params: {
-                    keyword: query,
-                    subType: 'HOTEL_LEISURE'
-                }
-            });
-            hotelSuggestions = hotelResponse.data.data.map(item => ({
-                name: item.name,
-                code: item.hotelId
-            }));
 
             // Fetch city suggestions
             const cityResponse = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations', {
@@ -608,15 +576,12 @@ app.get('/hotel-suggestions', async (req, res) => {
             }));
         }
 
-        // Combine suggestions and send response
-        const suggestions = [...citySuggestions, ...hotelSuggestions];
-        res.json(suggestions);
+        res.json(citySuggestions);
     } catch (error) {
         console.error('Error fetching suggestions:', error.message);
         res.status(500).send('Error fetching suggestions');
     }
 });
-
 
 
 // Start the server

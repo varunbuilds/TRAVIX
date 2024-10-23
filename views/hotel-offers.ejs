@@ -1,19 +1,129 @@
 <%- include('partials/header') %>
 
-    <div class="container mx-auto py-12">
-        <h1 class="text-3xl font-bold text-center mb-8">Hotel Offers</h1>
+<div class="max-w-7xl mx-auto px-4 py-8">
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <% hotels.forEach(hotel => { %>
-                <div class="bg-white p-6 rounded shadow">
-                    <h2 class="text-xl font-semibold mb-4"><%= hotel.hotel.name %></h2>
-                    <p class="text-gray-700"><%= hotel.hotel.address.lines.join(', ') %></p>
-                    <p class="text-gray-500">City: <%= hotel.hotel.address.cityName %></p>
-                    <p class="text-gray-500">Price: <%= hotel.offers[0].price.total %> <%= hotel.offers[0].price.currency %></p>
-                    <a href="#" class="block mt-4 px-4 py-2 bg-blue-500 text-white text-center rounded">Book Now</a>
+    <!-- Hotel Search Form -->
+    <form action="/hotel-offers" method="GET" class="bg-white mt-16 shadow-lg rounded-lg p-8 mb-8 border border-gray-200">
+
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <!-- City Field -->
+            <div class="relative">
+                <label for="searchQuery" class="block text-sm font-medium text-gray-700">City</label>
+                <input type="text" id="searchQuery" name="searchQuery" placeholder="e.g., New York" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off">
+                <ul id="suggestions-list" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto"></ul>
+                <input type="hidden" id="cityCode" name="cityCode">
+            </div>
+
+            <!-- Check-in Date -->
+            <div>
+                <label for="checkInDate" class="block text-sm font-medium text-gray-700">Check-in Date</label>
+                <input type="date" id="checkInDate" name="checkInDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Check-out Date -->
+            <div>
+                <label for="checkOutDate" class="block text-sm font-medium text-gray-700">Check-out Date</label>
+                <input type="date" id="checkOutDate" name="checkOutDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Number of Adults -->
+            <div>
+                <label for="adults" class="block text-sm font-medium text-gray-700">Number of Adults</label>
+                <input type="number" id="adults" name="adults" value="1" min="1" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+
+        <button type="submit" class="mt-6 w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 font-semibold">Search Hotels</button>
+    </form>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Hotel Results Section -->
+        <div class="col-span-1">
+            <% if (hotels && hotels.length > 0) { %>
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Available Hotels</h2>
+                <ul id="hotel-list" class="grid grid-cols-1 gap-6">
+                    <% hotels.slice(0, 10).forEach(hotel => { %>
+                        <li class="p-6 bg-white shadow-md rounded-lg hotel-item transition transform hover:shadow-lg flex items-start">
+                            <img src="default-image-url.jpg" alt="<%= hotel.name %>" class="w-32 h-32 object-cover rounded-md mr-4"> <!-- Placeholder image -->
+                            <div class="flex-grow">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1"><%= hotel.name %></h3>
+                                <div class="mb-2">
+                                    <strong class="text-lg text-gray-800">Location:</strong> 
+                                    <span class="text-gray-600">
+                                        <%= hotel.address.city %>, <%= hotel.address.countryCode %> <%= hotel.address.zip ? `(${hotel.address.zip})` : '' %>
+                                    </span>
+                                </div>
+                                <button 
+                                    type="button"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+                                    onclick="window.location.href='/hotel-details?hotelId=<%= hotel.hotelId %>'">
+                                    View Details
+                                </button>
+                            </div>
+                        </li>
+                    <% }); %>
+                </ul>                
+
+                <!-- Show More Button -->
+                <% if (hotels.length > 10) { %>
+                    <button id="show-more" class="mt-6 w-full bg-blue-600 text-white py-3 rounded-md text-lg font-semibold hover:bg-blue-700 transition">Show More</button>
+                <% } %>
+            <% } else { %>
+                <div class="flex justify-center items-center h-48">
+                    <p class="text-gray-500 text-lg">No hotels available for the specified destination and dates.</p>
                 </div>
-            <% }) %>
+            <% } %>
         </div>
     </div>
+</div>
 
 <%- include('partials/footer') %>
+
+<script>
+    const totalHotels = <%= hotels.length %>; // Total number of hotels available
+    const allHotels = <%- JSON.stringify(hotels) %>; // All hotels data
+
+    // Show More functionality
+    let currentIndex = 10; // Start from the first 10 hotels
+
+    document.getElementById('show-more')?.addEventListener('click', () => {
+        const hotelList = document.getElementById('hotel-list');
+
+        // Check if currentIndex is less than totalHotels
+        if (currentIndex < totalHotels) {
+            const newHotels = allHotels.slice(currentIndex, currentIndex + 10);
+
+            // Append the new hotels to the hotel list
+            newHotels.forEach(hotel => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('p-6', 'bg-white', 'shadow-md', 'rounded-lg', 'hotel-item', 'transition', 'transform', 'hover:shadow-lg', 'flex', 'items-start');
+
+                listItem.innerHTML = `
+                    <img src="default-image-url.jpg" alt="${hotel.name}" class="w-32 h-32 object-cover rounded-md mr-4">
+                    <div class="flex-grow">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-1">${hotel.name}</h3>
+                        <div class="mb-2">
+                            <strong class="text-lg text-gray-800">Location:</strong> 
+                            <span class="text-gray-600">${hotel.address.city}, ${hotel.address.countryCode} ${hotel.address.zip ? `(${hotel.address.zip})` : ''}</span>
+                        </div>
+                        <button 
+                            type="button"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+                            onclick="window.location.href='/hotel-details?hotelId=${hotel.hotelId}'">
+                            View Details
+                        </button>
+                    </div>
+                `;
+                hotelList.appendChild(listItem);
+            });
+
+            currentIndex += 10; // Increment the index
+
+            // Hide the Show More button if there are no more hotels to show
+            if (currentIndex >= totalHotels) {
+                document.getElementById('show-more').style.display = 'none';
+            }
+        }
+    });
+</script>

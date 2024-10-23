@@ -4,28 +4,37 @@
 
     <!-- Hotel Search Form -->
     <form action="/hotel-offers" method="GET" class="bg-white mt-16 shadow-md rounded-lg p-6 mb-8">
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <!-- City Field -->
             <div class="relative">
-                <label for="searchQuery" class="block text-sm font-medium text-gray-700">City or Hotel</label>
-                <input type="text" id="searchQuery" name="searchQuery" placeholder="e.g., New York or Ritz" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <label for="searchQuery" class="block text-sm font-medium text-gray-700">City</label>
+                <input type="text" id="searchQuery" name="searchQuery" placeholder="e.g., New York" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off">
                 <ul id="suggestions-list" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto"></ul>
                 <input type="hidden" id="cityCode" name="cityCode">
-                <input type="hidden" id="hotelName" name="hotelName">
             </div>
 
+            <!-- Check-in Date -->
             <div>
                 <label for="checkInDate" class="block text-sm font-medium text-gray-700">Check-in Date</label>
                 <input type="date" id="checkInDate" name="checkInDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
+            <!-- Check-out Date -->
             <div>
                 <label for="checkOutDate" class="block text-sm font-medium text-gray-700">Check-out Date</label>
                 <input type="date" id="checkOutDate" name="checkOutDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Number of Adults -->
+            <div>
+                <label for="adults" class="block text-sm font-medium text-gray-700">Number of Adults</label>
+                <input type="number" id="adults" name="adults" value="1" min="1" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
         </div>
 
         <button type="submit" class="mt-6 w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">Search Hotels</button>
     </form>
+    
 
     <!-- Popular Hotels -->
     <section>
@@ -138,60 +147,43 @@
 </script>
 
 <script>
+
     const searchQueryInput = document.getElementById('searchQuery');
     const suggestionsList = document.getElementById('suggestions-list');
-    const cityCodeInput = document.getElementById('cityCode');
-    const hotelNameInput = document.getElementById('hotelName');
 
     searchQueryInput.addEventListener('input', async () => {
-        const query = searchQueryInput.value.trim();
-        if (query.length < 3) {
-            suggestionsList.innerHTML = '';
-            return;
-        }
+        const query = searchQueryInput.value;
 
-        try {
-            const response = await fetch(`/hotel-suggestions?query=${encodeURIComponent(query)}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+        if (query.length >= 3) {
+            const response = await fetch(`/hotel-suggestions?query=${query}`);
             const suggestions = await response.json();
-            const uniqueSuggestions = [...new Set(suggestions.map(s => s.name))]; // Remove duplicates
+            
             suggestionsList.innerHTML = '';
 
-            uniqueSuggestions.forEach(suggestion => {
+            suggestions.forEach(suggestion => {
                 const listItem = document.createElement('li');
-                listItem.textContent = suggestion;
-                listItem.classList.add('cursor-pointer', 'hover:bg-gray-200', 'p-2', 'suggestion-item');
+                listItem.textContent = `${suggestion.name} (${suggestion.code})`;
+                listItem.classList.add('cursor-pointer', 'p-2', 'hover:bg-gray-100');
 
                 listItem.addEventListener('click', () => {
-                searchQueryInput.value = suggestion;
-                const selectedSuggestion = suggestions.find(s => s.name === suggestion);
-                if (selectedSuggestion) {
-                    if (selectedSuggestion.type === 'hotel') { // Use type to distinguish between hotel and city
-                        hotelNameInput.value = selectedSuggestion.name;
-                        cityCodeInput.value = '';
-                    } else if (selectedSuggestion.type === 'city') {
-                        cityCodeInput.value = selectedSuggestion.code;
-                        hotelNameInput.value = '';
-                    }
-                }
-                // Clear suggestions after selection for both cases
-                suggestionsList.innerHTML = ''; 
-            });
-
+                    searchQueryInput.value = suggestion.name;
+                    document.getElementById('cityCode').value = suggestion.code;
+                    suggestionsList.innerHTML = '';
+                });
 
                 suggestionsList.appendChild(listItem);
             });
-        } catch (error) {
-            console.error('Error fetching suggestions:', error);
+        } else {
+            suggestionsList.innerHTML = '';
         }
     });
 
-    // Optional: Hide suggestions when clicking outside
-document.addEventListener('click', (event) => {
-    if (!searchQueryInput.contains(event.target) && !suggestionsList.contains(event.target)) {
-        suggestionsList.innerHTML = ''; // Clear suggestions
-    }
-});
+
+
+        // Optional: Hide suggestions when clicking outside
+    document.addEventListener('click', (event) => {
+        if (!searchQueryInput.contains(event.target) && !suggestionsList.contains(event.target)) {
+            suggestionsList.innerHTML = ''; // Clear suggestions
+        }
+    });
 </script>
