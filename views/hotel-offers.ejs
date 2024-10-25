@@ -4,7 +4,6 @@
 
     <!-- Hotel Search Form -->
     <form action="/hotel-offers" method="GET" class="bg-white mt-16 shadow-lg rounded-lg p-8 mb-8 border border-gray-200">
-
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <!-- City Field -->
             <div class="relative">
@@ -37,23 +36,21 @@
     </form>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         <!-- Hotel Results Section -->
-        <div class="col-span-1">
+        <div class="col-span-2">
             <% if (hotels && hotels.length > 0) { %>
                 <h2 class="text-2xl font-semibold text-gray-900 mb-4">Available Hotels</h2>
-                <ul id="hotel-list" class="grid grid-cols-1 gap-6">
+                <ul id="hotel-list" class="grid grid-cols-2 gap-6">
                     <% hotels.slice(0, 10).forEach(hotel => { %>
-                        <li class="p-6 bg-white shadow-md rounded-lg hotel-item transition transform hover:shadow-lg flex items-start">
-                            <img src="default-image-url.jpg" alt="<%= hotel.name %>" class="w-32 h-32 object-cover rounded-md mr-4"> <!-- Placeholder image -->
+                        <li class="p-6 bg-white shadow-md rounded-lg hotel-item transition transform hover:shadow-lg flex items-start relative">
+                            <img src="default-image-url.jpg" alt="<%= hotel.name %>" class="w-32 h-32 object-cover rounded-md mr-4">
                             <div class="flex-grow">
                                 <h3 class="text-lg font-semibold text-gray-800 mb-1"><%= hotel.name %></h3>
-                                <div class="mb-2">
-                                    <strong class="text-lg text-gray-800">Location:</strong> 
-                                    <span class="text-gray-600">
-                                        <%= hotel.address.city %>, <%= hotel.address.countryCode %> <%= hotel.address.zip ? `(${hotel.address.zip})` : '' %>
-                                    </span>
-                                </div>
+                                <p class="text-gray-600">
+                                    <strong>Location:</strong> <%= hotel.address.city %>, <%= hotel.address.countryCode %> <%= hotel.address.zip ? `(${hotel.address.zip})` : '' %>
+                                </p>
+                            </div>
+                            <div class="absolute bottom-4 right-4">
                                 <button 
                                     type="button"
                                     class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
@@ -97,16 +94,17 @@
             // Append the new hotels to the hotel list
             newHotels.forEach(hotel => {
                 const listItem = document.createElement('li');
-                listItem.classList.add('p-6', 'bg-white', 'shadow-md', 'rounded-lg', 'hotel-item', 'transition', 'transform', 'hover:shadow-lg', 'flex', 'items-start');
+                listItem.classList.add('p-6', 'bg-white', 'shadow-md', 'rounded-lg', 'hotel-item', 'transition', 'transform', 'hover:shadow-lg', 'flex', 'items-start', 'relative');
 
                 listItem.innerHTML = `
                     <img src="default-image-url.jpg" alt="${hotel.name}" class="w-32 h-32 object-cover rounded-md mr-4">
                     <div class="flex-grow">
                         <h3 class="text-lg font-semibold text-gray-800 mb-1">${hotel.name}</h3>
-                        <div class="mb-2">
-                            <strong class="text-lg text-gray-800">Location:</strong> 
-                            <span class="text-gray-600">${hotel.address.city}, ${hotel.address.countryCode} ${hotel.address.zip ? `(${hotel.address.zip})` : ''}</span>
-                        </div>
+                        <p class="text-gray-600">
+                            <strong>Location:</strong> ${hotel.address.city}, ${hotel.address.countryCode} ${hotel.address.zip ? `(${hotel.address.zip})` : ''}
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 right-4">
                         <button 
                             type="button"
                             class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
