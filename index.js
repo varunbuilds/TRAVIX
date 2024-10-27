@@ -159,29 +159,29 @@ app.get('/flight-offers', async (req, res) => {
 
 
 
-async function getAirlineName(carrierCode) {
-    const airlineUrl = `https://test.api.amadeus.com/v1/reference-data/airlines`;
-    try {
-        const response = await axios.get(airlineUrl, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            },
-            params: {
-                airlineCodes: carrierCode
-            }
-        });
+// async function getAirlineName(carrierCode) {
+//     const airlineUrl = `https://test.api.amadeus.com/v1/reference-data/airlines`;
+//     try {
+//         const response = await axios.get(airlineUrl, {
+//             headers: {
+//                 Authorization: `Bearer ${accessToken}`
+//             },
+//             params: {
+//                 airlineCodes: carrierCode
+//             }
+//         });
 
-        const airlineData = response.data;
-        if (airlineData.data.length > 0) {
-            return airlineData.data[0].commonName || airlineData.data[0].businessName;
-        } else {
-            return carrierCode;  // Fallback to code if name not found
-        }
-    } catch (error) {
-        console.error(`Error fetching airline name for ${carrierCode}:`, error.message);
-        return carrierCode;
-    }
-}
+//         const airlineData = response.data;
+//         if (airlineData.data.length > 0) {
+//             return airlineData.data[0].commonName || airlineData.data[0].businessName;
+//         } else {
+//             return carrierCode;  // Fallback to code if name not found
+//         }
+//     } catch (error) {
+//         console.error(`Error fetching airline name for ${carrierCode}:`, error.message);
+//         return carrierCode;
+//     }
+// }
 
 
 // Helper function to fetch city name from IATA code

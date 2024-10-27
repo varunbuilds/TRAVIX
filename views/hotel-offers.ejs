@@ -8,27 +8,35 @@
             <!-- City Field -->
             <div class="relative">
                 <label for="searchQuery" class="block text-sm font-medium text-gray-700">City</label>
-                <input type="text" id="searchQuery" name="searchQuery" placeholder="e.g., New York" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off">
+                <input type="text" id="searchQuery" name="searchQuery" placeholder="e.g., New York" 
+                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                       autocomplete="off" 
+                       value="<%= query.searchQuery || '' %>"> <!-- Set value from query -->
                 <ul id="suggestions-list" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto"></ul>
-                <input type="hidden" id="cityCode" name="cityCode">
+                <input type="hidden" id="cityCode" name="cityCode" value="<%= query.cityCode || '' %>"> <!-- Set value from query -->
             </div>
 
             <!-- Check-in Date -->
             <div>
                 <label for="checkInDate" class="block text-sm font-medium text-gray-700">Check-in Date</label>
-                <input type="date" id="checkInDate" name="checkInDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="checkInDate" name="checkInDate" required 
+                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       value="<%= query.checkInDate || '' %>"> <!-- Set value from query -->
             </div>
 
             <!-- Check-out Date -->
             <div>
                 <label for="checkOutDate" class="block text-sm font-medium text-gray-700">Check-out Date</label>
-                <input type="date" id="checkOutDate" name="checkOutDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="checkOutDate" name="checkOutDate" required 
+                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       value="<%= query.checkOutDate || '' %>"> <!-- Set value from query -->
             </div>
 
             <!-- Number of Adults -->
             <div>
                 <label for="adults" class="block text-sm font-medium text-gray-700">Number of Adults</label>
-                <input type="number" id="adults" name="adults" value="1" min="1" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="number" id="adults" name="adults" value="<%= query.adults || 1 %>" min="1" 
+                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"> <!-- Set value from query -->
             </div>
         </div>
 
@@ -47,7 +55,7 @@
                             <div class="flex-grow">
                                 <h3 class="text-lg font-semibold text-gray-800 mb-1"><%= hotel.name %></h3>
                                 <p class="text-gray-600">
-                                    <strong>Location:</strong> <%= hotel.address.city %>, <%= hotel.address.countryCode %> <%= hotel.address.zip ? `(${hotel.address.zip})` : '' %>
+                                    <strong>Location:</strong> <%= query.searchQuery || '' %>, <%= hotel.address.countryCode %>
                                 </p>
                             </div>
                             <div class="absolute bottom-4 right-4">
@@ -101,7 +109,7 @@
                     <div class="flex-grow">
                         <h3 class="text-lg font-semibold text-gray-800 mb-1">${hotel.name}</h3>
                         <p class="text-gray-600">
-                            <strong>Location:</strong> ${hotel.address.city}, ${hotel.address.countryCode} ${hotel.address.zip ? `(${hotel.address.zip})` : ''}
+                            <strong>Location:</strong> ${'<%= query.searchQuery || "" %>'}, ${hotel.address.countryCode} 
                         </p>
                     </div>
                     <div class="absolute bottom-4 right-4">
@@ -122,6 +130,47 @@
             if (currentIndex >= totalHotels) {
                 document.getElementById('show-more').style.display = 'none';
             }
+        }
+    });
+</script>
+<script>
+
+    const searchQueryInput = document.getElementById('searchQuery');
+    const suggestionsList = document.getElementById('suggestions-list');
+
+    searchQueryInput.addEventListener('input', async () => {
+        const query = searchQueryInput.value;
+
+        if (query.length >= 3) {
+            const response = await fetch(`/hotel-suggestions?query=${query}`);
+            const suggestions = await response.json();
+            
+            suggestionsList.innerHTML = '';
+
+            suggestions.forEach(suggestion => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${suggestion.name} (${suggestion.code})`;
+                listItem.classList.add('cursor-pointer', 'p-2', 'hover:bg-gray-100');
+
+                listItem.addEventListener('click', () => {
+                    searchQueryInput.value = suggestion.name;
+                    document.getElementById('cityCode').value = suggestion.code;
+                    suggestionsList.innerHTML = '';
+                });
+
+                suggestionsList.appendChild(listItem);
+            });
+        } else {
+            suggestionsList.innerHTML = '';
+        }
+    });
+
+
+
+        // Optional: Hide suggestions when clicking outside
+    document.addEventListener('click', (event) => {
+        if (!searchQueryInput.contains(event.target) && !suggestionsList.contains(event.target)) {
+            suggestionsList.innerHTML = ''; // Clear suggestions
         }
     });
 </script>
