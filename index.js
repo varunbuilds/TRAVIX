@@ -1,17 +1,52 @@
-const express = require('express');
-const path = require('path');
-const axios = require('axios');
-const dotenv = require('dotenv');
+import pg from "pg";
+import passport from "passport";
+import { fileURLToPath } from 'url';
+import { Strategy } from "passport-local";
+import session from "express-session";
+import express from 'express';
+import path from 'path';
+import axios from 'axios';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+
+
+app.use(session({
+  secret: 'your_secret_key',  // Change this to something more secure
+  resave: false,
+  saveUninitialized: true,
+}));
+
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+// Create __dirname for ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Now you can use __dirname as usual
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json()); // To parse incoming JSON requests
+// Middleware to parse URL-encoded form data
+app.use(express.urlencoded({ extended: true }));
+
+const viewsPath = path.join(__dirname, 'views');
+console.log('Views Directory:', viewsPath);  // Add this log for debugging
+app.set('views', viewsPath);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+const db = new pg.Client({
+  user: "postgres",
+  host: "localhost",
+  database: "travix",
+  password: "54321",
+  port: 5432,
+});
+db.connect();
 
 // Amadeus Authentication
 let accessToken = '';
@@ -41,14 +76,86 @@ app.use(async (req, res, next) => {
     next();
 });
 
+
+app.get("/login", (req, res) => {
+    res.render("login.ejs", { title: 'Login - Travix' });
+});
+  
+app.get("/register", (req, res) => {
+    res.render("register.ejs", { title: 'Register - Travix' });
+});
+  
+app.get("/logout", (req, res) => {
+    req.logout(function (err) {
+      if (err) {
+        return next(err);
+      }
+      res.redirect("/");
+    });
+});
+
+app.post("/register", async (req, res) => {
+    const email = req.body.username;
+    const password = req.body.password;
+
+    try {
+        const checkResult = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+
+        if (checkResult.rows.length > 0) {
+            res.send("Email already exists. Try logging in.");
+            
+        } else {
+            const result = await db.query(
+                "INSERT INTO users (email, password) VALUES ($1, $2)",
+                [email, password]
+            );
+            // Store user information in session after successful registration
+            req.session.user = { email: email };
+            res.redirect('/');  // Redirect to home or another page after successful registration
+        }
+    } catch (err) {
+        console.log(err);
+    }
+});
+
+app.post("/login", async (req, res) => {
+    const email = req.body.username;
+    const password = req.body.password;
+
+    try {
+        const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+        if (result.rows.length > 0) {
+            const user = result.rows[0];
+            const storedPassword = user.password;
+
+            if (password === storedPassword) {
+                // Store user information in session after successful login
+                req.session.user = { email: email };
+                res.redirect('/');  // Redirect to home or another page after successful login
+            } else {
+                res.send("Incorrect Password");
+            }
+        } else {
+            res.send("User not found");
+        }
+    } catch (err) {
+        console.log(err);
+    }
+});
+
+
+
 // Landing Page Route
 app.get('/', (req, res) => {
     res.render('index', { title: 'Travix - Travel Booking' });
 });
 
+
 // Flights Route
 app.get('/flights', (req, res) => {
-    res.render('flights', { title: 'Search Flights', query: req.query });
+
+        res.render('flights', { title: 'Search Flights', query: req.query });
+    
 });
 
 app.get('/suggestions', async (req, res) => {
@@ -156,33 +263,6 @@ app.get('/flight-offers', async (req, res) => {
         res.status(500).send('Error fetching flight offers');
     }
 });
-
-
-
-// async function getAirlineName(carrierCode) {
-//     const airlineUrl = `https://test.api.amadeus.com/v1/reference-data/airlines`;
-//     try {
-//         const response = await axios.get(airlineUrl, {
-//             headers: {
-//                 Authorization: `Bearer ${accessToken}`
-//             },
-//             params: {
-//                 airlineCodes: carrierCode
-//             }
-//         });
-
-//         const airlineData = response.data;
-//         if (airlineData.data.length > 0) {
-//             return airlineData.data[0].commonName || airlineData.data[0].businessName;
-//         } else {
-//             return carrierCode;  // Fallback to code if name not found
-//         }
-//     } catch (error) {
-//         console.error(`Error fetching airline name for ${carrierCode}:`, error.message);
-//         return carrierCode;
-//     }
-// }
-
 
 // Helper function to fetch city name from IATA code
 async function getCityNameFromIATA(iataCode) {
@@ -404,6 +484,8 @@ app.post('/confirm-booking', async (req, res) => {
         }
 
         const bookingId = bookingData.data.id;
+        console.log(bookingId);
+        
         const redirectUrl = `/booked-flight?name=${encodeURIComponent(travelerName)}&email=${encodeURIComponent(travelerEmail)}&phone=${encodeURIComponent(travelerPhone)}&dob=${encodeURIComponent(travelerDOB)}&gender=${encodeURIComponent(travelerGender)}&bookingId=${encodeURIComponent(bookingId)}`;
 
         res.json({ redirect: redirectUrl });
@@ -481,8 +563,44 @@ app.get('/booked-flight', async (req, res) => {
 
 // Hotels Route (New)
 app.get('/hotels', (req, res) => {
-    res.render('hotels', { title: 'Search Hotels', query: req.query });
+    
+        res.render('hotels', { title: 'Search Hotels', query: req.query });
+
+    
 });
+
+// Autocomplete Suggestions Route (for city names)
+app.get('/hotel-suggestions', async (req, res) => {
+    const query = req.query.query;
+
+    try {
+        let citySuggestions = [];
+
+        if (query.length >= 3) {
+
+            // Fetch city suggestions
+            const cityResponse = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations', {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                },
+                params: {
+                    keyword: query,
+                    subType: 'CITY'
+                }
+            });
+            citySuggestions = cityResponse.data.data.map(item => ({
+                name: item.name,
+                code: item.iataCode
+            }));
+        }
+
+        res.json(citySuggestions);
+    } catch (error) {
+        console.error('Error fetching suggestions:', error.message);
+        res.status(500).send('Error fetching suggestions');
+    }
+});
+
 
 // Route for fetching hotel offers by city
 app.get('/hotel-offers', async (req, res) => {
@@ -529,7 +647,7 @@ app.get('/hotel-offers', async (req, res) => {
         });
 
         
-        console.log('Hotels response:', offersResponse.data);
+        // console.log('Hotels response:', offersResponse.data);
 
         // Ensure the API returned hotel data
         if (!offersResponse.data.data || offersResponse.data.data.length === 0) {
@@ -551,36 +669,95 @@ app.get('/hotel-offers', async (req, res) => {
     }
 });
 
-// Autocomplete Suggestions Route (for city names)
-app.get('/hotel-suggestions', async (req, res) => {
-    const query = req.query.query;
+app.get('/hotel-details', async (req, res) => {
+    const offerId = req.query.hotelId; // Ensure this matches the button's parameter
+    console.log(offerId);
+    // if (!offerId) {
+    //     return res.status(400).send('Hotel offer ID is required');
+    // }
 
     try {
-        let citySuggestions = [];
+        // Fetch the specific hotel offer details
+        const hotelOfferResponse = await axios.get(`https://test.api.amadeus.com/v3/shopping/hotel-offers?hotelIds=${offerId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` } // Ensure this is correct
+        });
 
-        if (query.length >= 3) {
-
-            // Fetch city suggestions
-            const cityResponse = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations', {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                },
-                params: {
-                    keyword: query,
-                    subType: 'CITY'
-                }
-            });
-            citySuggestions = cityResponse.data.data.map(item => ({
-                name: item.name,
-                code: item.iataCode
-            }));
+        const hotelOffer = hotelOfferResponse.data.data[0];
+        console.log(hotelOffer);
+        
+        if (!hotelOffer) {
+            return res.status(404).send('Hotel offer not found');
         }
 
-        res.json(citySuggestions);
+        // Prepare the hotel data for display on the `hotel-details` page
+        const hotelInfo = {
+            id: hotelOffer.hotel.hotelId,
+            name: hotelOffer.hotel.name,
+            description: hotelOffer.hotel.description || "No description available",
+            address: hotelOffer.hotel.address,
+            rating: hotelOffer.hotel.rating || 'N/A',
+            offers: hotelOffer.offers.map(offer => ({
+                checkInDate: offer.checkInDate,
+                checkOutDate: offer.checkOutDate,
+                currency: offer.price.currency,
+                price: offer.price.total,
+                room: {
+                    id: offer.room.id,
+                    description: offer.room.description.text,
+                    type: offer.room.type,
+                    category: offer.room.typeEstimated.category,
+                    beds: offer.room.typeEstimated.beds,
+                    bedType: offer.room.typeEstimated.bedType
+                }
+            }))
+        };
+        
+
+        res.render('hotel-details', {
+            title: 'Hotel Details',
+            hotel: hotelInfo
+        });
     } catch (error) {
-        console.error('Error fetching suggestions:', error.message);
-        res.status(500).send('Error fetching suggestions');
+        console.error('Error fetching hotel details:', error.message);
+        res.status(500).send('Error fetching hotel details');
     }
+});
+
+
+
+
+app.get('/booked-hotel', async (req, res) => {
+    const { name, email, phone, dob, gender, bookingId } = req.query;
+
+    if (!bookingId) {
+        return res.status(400).json({ error: 'Missing booking ID' });
+    }
+
+    try {
+        const bookingDetailsResponse = await axios.get(`https://test.api.amadeus.com/v1/booking/hotel-bookings/${bookingId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+
+        const bookingDetails = bookingDetailsResponse.data;
+
+        res.render('booked-hotel', { 
+            title: 'Hotel Booking Confirmation',
+            travelerInfo: { name, email, phone, dob, gender },
+            bookingDetails
+        });
+    } catch (error) {
+        console.log('Error fetching booking details:', error.message);
+        res.status(500).json({ error: 'Error fetching booking details' });
+    }
+});
+
+
+// Cars Route (New)
+app.get('/cars', (req, res) => {
+    
+        res.render('cars', { title: 'Search Cars', query: req.query });
+
+    
 });
 
 

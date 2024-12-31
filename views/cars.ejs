@@ -1,50 +1,43 @@
 <%- include('partials/header') %>
 
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Page Title -->
-    <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">Search Car Rentals</h1>
 
     <!-- Car Rental Search Form -->
-    <form action="/car-offers" method="GET" class="bg-white shadow-md rounded-lg p-6 mb-8">
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <!-- Pickup Location -->
+    <form action="/car-offers" method="GET" class="bg-gradient-to-r mt-16 from-white to-blue-50 shadow-lg rounded-2xl p-8 mb-12">
+        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-2">
+
+            <!-- Pickup Location Input -->
             <div class="relative">
-                <label for="pickupLocation" class="block text-sm font-medium text-gray-700">Pickup Location</label>
-                <input type="text" id="pickupLocation" name="pickupLocation" placeholder="e.g., Los Angeles" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.pickupLocation || '' %>">
-                <ul id="pickup-location-suggestions" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto"></ul>
-                <input type="hidden" id="pickup-location-code" name="pickupLocationCode" value="<%= query.pickupLocationCode || '' %>">
+                <label for="pickupLocation" class="block text-sm font-semibold text-gray-700 mb-2">Pickup Location</label>
+                <input type="text" id="pickupLocation" name="pickupLocation" placeholder="e.g., Madrid" required class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" value="<%= query.pickupLocation || '' %>">
+                <ul id="pickup-suggestions" class="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-lg max-h-60 overflow-y-auto"></ul>
+                <input type="hidden" id="pickup-code" name="pickupCode" value="<%= query.pickupCode || '' %>">
+            </div>
+
+            <!-- Dropoff Location Input -->
+            <div class="relative">
+                <label for="dropoffLocation" class="block text-sm font-semibold text-gray-700 mb-2">Dropoff Location</label>
+                <input type="text" id="dropoffLocation" name="dropoffLocation" placeholder="e.g., New York" required class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" value="<%= query.dropoffLocation || '' %>">
+                <ul id="dropoff-suggestions" class="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-lg max-h-60 overflow-y-auto"></ul>
+                <input type="hidden" id="dropoff-code" name="dropoffCode" value="<%= query.dropoffCode || '' %>">
             </div>
 
             <!-- Pickup Date -->
             <div>
-                <label for="pickupDate" class="block text-sm font-medium text-gray-700">Pickup Date</label>
-                <input type="date" id="pickupDate" name="pickupDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.pickupDate || '' %>">
+                <label for="pickupDate" class="block text-sm font-semibold text-gray-700 mb-2">Pickup Date</label>
+                <input type="date" id="pickupDate" name="pickupDate" required class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" value="<%= query.pickupDate || '' %>">
             </div>
 
-            <!-- Drop-off Date -->
+            <!-- Dropoff Date -->
             <div>
-                <label for="dropoffDate" class="block text-sm font-medium text-gray-700">Drop-off Date</label>
-                <input type="date" id="dropoffDate" name="dropoffDate" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value="<%= query.dropoffDate || '' %>">
-            </div>
-
-            <!-- Car Type -->
-            <div>
-                <label for="carType" class="block text-sm font-medium text-gray-700">Car Type</label>
-                <select id="carType" name="carType" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="economy" <%= query.carType === 'economy' ? 'selected' : '' %>>Economy</option>
-                    <option value="compact" <%= query.carType === 'compact' ? 'selected' : '' %>>Compact</option>
-                    <option value="intermediate" <%= query.carType === 'intermediate' ? 'selected' : '' %>>Intermediate</option>
-                    <option value="fullsize" <%= query.carType === 'fullsize' ? 'selected' : '' %>>Fullsize</option>
-                    <option value="suv" <%= query.carType === 'suv' ? 'selected' : '' %>>SUV</option>
-                    <option value="luxury" <%= query.carType === 'luxury' ? 'selected' : '' %>>Luxury</option>
-                </select>
+                <label for="dropoffDate" class="block text-sm font-semibold text-gray-700 mb-2">Dropoff Date</label>
+                <input type="date" id="dropoffDate" name="dropoffDate" required class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" value="<%= query.dropoffDate || '' %>">
             </div>
         </div>
 
         <!-- Search Button -->
-        <button type="submit" class="mt-6 w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">Search Car Rentals</button>
+        <button type="submit" class="mt-10 w-full px-6 py-3 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-4 focus:ring-blue-400">Search Cars</button>
     </form>
-
     <!-- Popular Car Rental Destinations Carousel -->
     <section>
         <h2 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Popular Car Rental Destinations</h2>
@@ -111,6 +104,8 @@
     </section>
 </div>
 
+<%- include('partials/footer') %>
+
 <script>
     let currentCarSlide = 0;
     const totalCarSlides = document.querySelectorAll('#car-carousel .carousel-item').length;
@@ -125,6 +120,62 @@
         document.getElementById('car-carousel').style.transform = `translateX(-${currentCarSlide * 100}%)`;
     };
 </script>
+<script>
+    // Set default pickup and dropoff dates
+    window.onload = function() {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const year = tomorrow.getFullYear();
+        const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+        const day = String(tomorrow.getDate()).padStart(2, '0');
+        const defaultDate = `${year}-${month}-${day}`;
 
-<%- include('partials/autocomplete') %>
-<%- include('partials/footer') %>
+        document.getElementById('pickupDate').value = defaultDate;
+        document.getElementById('dropoffDate').value = defaultDate;
+    };
+
+    // Debounce function to handle suggestions efficiently
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    // Fetch suggestions for pickup/dropoff locations
+    async function fetchSuggestions(inputElement, listId) {
+        const query = inputElement.value;
+        if (query.length === 0) {
+            document.getElementById(listId).innerHTML = '';  
+            return;
+        }
+
+        try {
+            const response = await fetch(`/suggestions?query=${query}`);
+            const data = await response.json();
+
+            const listElement = document.getElementById(listId);
+            listElement.innerHTML = '';
+
+            data.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('px-3', 'py-2', 'hover:bg-gray-100', 'cursor-pointer');
+                listItem.textContent = `${item.city} (${item.code}) - ${item.airport}`;
+                listItem.addEventListener('click', () => {
+                    inputElement.value = `${item.city} (${item.code})`;
+                    document.getElementById(`${inputElement.id}-code`).value = item.code;
+                    listElement.innerHTML = '';
+                });
+                listElement.appendChild(listItem);
+            });
+        } catch (error) {
+            console.error('Error fetching suggestions:', error);
+        }
+    }
+
+    // Attach debounced event listeners to the input fields
+    document.getElementById('pickupLocation').addEventListener('input', debounce(event => fetchSuggestions(event.target, 'pickup-suggestions'), 300));
+    document.getElementById('dropoffLocation').addEventListener('input', debounce(event => fetchSuggestions(event.target, 'dropoff-suggestions'), 300));
+</script>
+
