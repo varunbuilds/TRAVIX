@@ -12,9 +12,12 @@ const __dirname = path.dirname(__filename);
 
 env.config();
 
-app.set('views', path.join(__dirname, 'views'));
+// Configure the views directory and view engine
+app.set('views', path.join(__dirname, 'views')); // Ensure 'views' exists in the root directory
 app.set('view engine', 'ejs');
-app.use(express.static("public"));
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json()); 
 
