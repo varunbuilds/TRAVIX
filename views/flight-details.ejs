@@ -225,12 +225,18 @@
                         <p class="text-gray-600">Account Number: 123456789</p>
                         <p class="text-gray-600">Routing Number: 987654321</p>
                     </div>
+
                 </div>
             </div>
             <button type="submit" class="mt-6 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 Confirm Booking
             </button>
         </form>
+          <!-- Loader -->
+        <div id="loader" class="hidden fixed inset-0 bg-transparent flex flex-col items-center justify-center z-50">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-blue-500 font-semibold">Loading, please wait...</p>
+        </div>
     </div>
 
     <% } else { %>
@@ -333,3 +339,15 @@
         });
     });
 </script>
+
+<script>
+    // Wait until the page fully loads, then hide the loader
+    window.addEventListener('load', function () {
+      document.getElementById('loader').classList.add('hidden');
+    });
+
+    // Show the loader when the form is submitted
+    document.getElementById('booking-form').addEventListener('submit', function () {
+      document.getElementById('loader').classList.remove('hidden');
+    });
+  </script>
