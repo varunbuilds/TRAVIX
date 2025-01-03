@@ -341,11 +341,11 @@
 </script>
 
 <script>
-    // Wait until the page fully loads, then hide the loader
-    window.addEventListener('load', function () {
+    // Ensure the loader is hidden on page load (including back/forward navigation)
+    document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('loader').classList.add('hidden');
     });
-
+  
     // Show the loader when the form is submitted
     document.getElementById('booking-form').addEventListener('submit', function () {
       document.getElementById('loader').classList.remove('hidden');
