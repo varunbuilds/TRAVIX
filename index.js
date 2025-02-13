@@ -110,7 +110,7 @@ app.post("/register", async (req, res) => {
                 [email, password]
             );
             // Store user information in session after successful registration
-            req.session.user = { email: email };
+            req.session.user = { email: email }; 
             res.redirect('/');  // Redirect to home or another page after successful registration
         }
     } catch (err) {
