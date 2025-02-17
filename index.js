@@ -1,8 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import express from 'express';
-import session from 'express-session';
-import redis from 'redis';
-import { RedisStore } from 'connect-redis';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -11,21 +8,13 @@ dotenv.config();
 
 const app = express();
 const PORT = 3000;
-const client = redis.createClient();
 
 // Initialize Supabase Client
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-// __filename and __dirname workaround for ES Modules
+// Calculate __dirname manually
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-app.use(session({
-    store: new RedisStore({ client }),
-    secret: 'your-secret-key',  // Replace with a secure key
-    resave: false,
-    saveUninitialized: true,
-}));
+const __dirname = path.dirname(__filename);  // Equivalent to __dirname
 
 app.set('views', path.join(__dirname, 'views')); // Adjust path as needed
 app.set('view engine', 'ejs');
@@ -33,13 +22,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-
 // Middleware to check user session
-app.use((req, res, next) => {
-  res.locals.user = req.session.user || null; // Store user session for EJS
-  next();
-});
+app.use(async (req, res, next) => {
+    const { data: session, error } = await supabase.auth.getSession();
+  
+    if (error) {
+      console.error('Error getting session:', error);
+    }
+  
+    res.locals.user = session?.user || null; // Store user session for EJS
+    next();
+  });
 
 
 // **Sign Up Page**
@@ -51,7 +44,6 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
     res.render("login", { title: "Login - Travix" });
 });
-
   
 // **Sign Up Route**
 app.post("/register", async (req, res) => {
@@ -62,8 +54,7 @@ app.post("/register", async (req, res) => {
     return res.send(`Error: ${error.message}`);
   }
   
-  req.session.user = data.user; // Store user session
-  res.redirect("/");
+  res.redirect("/"); // Redirect to home page after successful sign-up
 });
 
 // **Login Route**
@@ -75,8 +66,7 @@ app.post("/login", async (req, res) => {
     return res.send(`Error: ${error.message}`);
   }
   
-  req.session.user = data.user; // Store user session
-  res.redirect("/");
+  res.redirect("/"); // Redirect to home page after successful login
 });
 
 // **Google Authentication**
@@ -101,21 +91,24 @@ app.get("/auth/callback", async (req, res) => {
     return res.send(`Error: ${error.message}`);
   }
 
-  req.session.user = user;
-  res.redirect("/");
+  res.redirect("/"); // Redirect to home page after successful authentication
 });
 
 // **Logout Route**
-app.get("/logout", (req, res) => {
-  req.session.destroy();
-  res.redirect("/");
+app.get("/logout", async (req, res) => {
+  const { error } = await supabase.auth.signOut();
+  
+  if (error) {
+    return res.send(`Error: ${error.message}`);
+  }
+
+  res.redirect("/"); // Redirect to home page after logout
 });
 
 // **Landing Page**
 app.get("/", (req, res) => {
   res.render("index", { title: "Travix - Travel Booking" });
 });
-
 
 // Flights Route
 app.get('/flights', (req, res) => {
