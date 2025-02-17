@@ -1,11 +1,8 @@
-import pg from "pg";
-import passport from "passport";
-import { fileURLToPath } from 'url';
-import { Strategy } from "passport-local";
-import session from "express-session";
+import { createClient } from '@supabase/supabase-js';
 import express from 'express';
+import session from 'express-session';
 import path from 'path';
-import axios from 'axios';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,141 +10,101 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-
+// Initialize Supabase Client
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 app.use(session({
-  secret: 'your_secret_key',  // Change this to something more secure
+  secret: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtmb2ttZHZ3aXJlc2xucHdsaG9hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczOTQ0MDU4OCwiZXhwIjoyMDU1MDE2NTg4fQ.H5ROs_YMGKD8aPhmoV2j2O2r19bHBg4-IY54ejoo16E', // Replace with a secure key
   resave: false,
   saveUninitialized: true,
 }));
 
 app.set('view engine', 'ejs');
-// Create __dirname for ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Now you can use __dirname as usual
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json()); // To parse incoming JSON requests
-// Middleware to parse URL-encoded form data
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const viewsPath = path.join(__dirname, 'views');
-console.log('Views Directory:', viewsPath);  // Add this log for debugging
-app.set('views', viewsPath);
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-const db = new pg.Client({
-  user: "postgres",
-  host: "localhost",
-  database: "travix",
-  password: "54321",
-  port: 5432,
-});
-db.connect();
-
-// Amadeus Authentication
-let accessToken = '';
-
-// Function to authenticate with Amadeus API
-async function authenticateAmadeus() {
-    const authUrl = 'https://test.api.amadeus.com/v1/security/oauth2/token';
-    try {
-        const response = await axios.post(authUrl, new URLSearchParams({
-            grant_type: 'client_credentials',
-            client_id: process.env.AMADEUS_CLIENT_ID,
-            client_secret: process.env.AMADEUS_CLIENT_SECRET
-        }).toString(), {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        });
-        accessToken = response.data.access_token;
-    } catch (error) {
-        console.error('Error authenticating with Amadeus:', error.message);
-    }
-}
-
-// Middleware to ensure Amadeus is authenticated
-app.use(async (req, res, next) => {
-    if (!accessToken) {
-        await authenticateAmadeus();
-    }
-    next();
+// Middleware to check user session
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null; // Store user session for EJS
+  next();
 });
 
 
-app.get("/login", (req, res) => {
-    res.render("login.ejs", { title: 'Login - Travix' });
-});
-  
+// **Sign Up Page**
 app.get("/register", (req, res) => {
-    res.render("register.ejs", { title: 'Register - Travix' });
+    res.render("register", { title: "Sign Up - Travix" });
 });
   
-app.get("/logout", (req, res) => {
-    req.logout(function (err) {
-      if (err) {
-        return next(err);
-      }
-      res.redirect("/");
-    });
+// **Login Page**
+app.get("/login", (req, res) => {
+    res.render("login", { title: "Login - Travix" });
 });
 
+  
+// **Sign Up Route**
 app.post("/register", async (req, res) => {
-    const email = req.body.username;
-    const password = req.body.password;
+  const { email, password } = req.body;
+  const { data, error } = await supabase.auth.signUp({ email, password });
 
-    try {
-        const checkResult = await db.query("SELECT * FROM users WHERE email = $1", [email]);
-
-        if (checkResult.rows.length > 0) {
-            res.send("Email already exists. Try logging in.");
-            
-        } else {
-            const result = await db.query(
-                "INSERT INTO users (email, password) VALUES ($1, $2)",
-                [email, password]
-            );
-            // Store user information in session after successful registration
-            req.session.user = { email: email }; 
-            res.redirect('/');  // Redirect to home or another page after successful registration
-        }
-    } catch (err) {
-        console.log(err);
-    }
+  if (error) {
+    return res.send(`Error: ${error.message}`);
+  }
+  
+  req.session.user = data.user; // Store user session
+  res.redirect("/");
 });
 
+// **Login Route**
 app.post("/login", async (req, res) => {
-    const email = req.body.username;
-    const password = req.body.password;
+  const { email, password } = req.body;
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    try {
-        const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
-        if (result.rows.length > 0) {
-            const user = result.rows[0];
-            const storedPassword = user.password;
-
-            if (password === storedPassword) {
-                // Store user information in session after successful login
-                req.session.user = { email: email };
-                res.redirect('/');  // Redirect to home or another page after successful login
-            } else {
-                res.send("Incorrect Password");
-            }
-        } else {
-            res.send("User not found");
-        }
-    } catch (err) {
-        console.log(err);
-    }
+  if (error) {
+    return res.send(`Error: ${error.message}`);
+  }
+  
+  req.session.user = data.user; // Store user session
+  res.redirect("/");
 });
 
+// **Google Authentication**
+app.get("/auth/google", async (req, res) => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${process.env.BASE_URL}/auth/callback` },
+  });
 
+  if (error) {
+    return res.send(`Error: ${error.message}`);
+  }
 
-// Landing Page Route
-app.get('/', (req, res) => {
-    res.render('index', { title: 'Travix - Travel Booking' });
+  res.redirect(data.url); // Redirect to Google Auth
+});
+
+// **Google Auth Callback**
+app.get("/auth/callback", async (req, res) => {
+  const { user, session, error } = await supabase.auth.getUser(req.query.access_token);
+
+  if (error) {
+    return res.send(`Error: ${error.message}`);
+  }
+
+  req.session.user = user;
+  res.redirect("/");
+});
+
+// **Logout Route**
+app.get("/logout", (req, res) => {
+  req.session.destroy();
+  res.redirect("/");
+});
+
+// **Landing Page**
+app.get("/", (req, res) => {
+  res.render("index", { title: "Travix - Travel Booking" });
 });
 
 

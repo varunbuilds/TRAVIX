@@ -1,43 +1,51 @@
 <%- include('partials/header') %>
 
-<!-- Full Page Background -->
 <body class="bg-cover bg-center h-screen" style="background-image: url('/images/landing-pic.png');">
   
-  <!-- Content Section -->
   <div class="flex justify-center items-center h-full">
     <h1 class="text-4xl md:text-5xl lg:text-6xl text-white font-bold text-center mt-24">Login to Your Account</h1>
   </div>
 
-  <!-- Container with padding around the form and more space around the white box -->
-  <div class="max-w-4xl mx-auto p-8 sm:px-8 px-4 bg-white mt-10 mb-12 rounded-lg shadow-md sm:mt-16 sm:mb-16">
+  <div class="max-w-4xl mx-auto p-8 bg-white mt-10 rounded-lg shadow-md">
     <div class="text-center mb-8">
       <h2 class="text-3xl font-semibold text-gray-800">Welcome to Travix</h2>
-      <p class="text-lg text-gray-600">Please login to continue your booking process.</p>
+      <p class="text-lg text-gray-600">Please login to continue.</p>
     </div>
     
-    <!-- Login Form -->
-    <form action="/login" method="POST" class="space-y-6">
+    <form id="login-form" class="space-y-6">
       <div>
-        <label for="username" class="block text-sm font-semibold text-gray-800">Email</label>
-        <input type="email" class="w-full mt-2 px-4 py-3 border rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" name="username" required>
+        <label class="block text-sm font-semibold text-gray-800">Email</label>
+        <input type="email" id="email" class="w-full mt-2 px-4 py-3 border rounded-md">
       </div>
       
       <div>
-        <label for="password" class="block text-sm font-semibold text-gray-800">Password</label>
-        <input type="password" class="w-full mt-2 px-4 py-3 border rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" name="password" required>
+        <label class="block text-sm font-semibold text-gray-800">Password</label>
+        <input type="password" id="password" class="w-full mt-2 px-4 py-3 border rounded-md">
       </div>
       
-      <button type="submit" class="w-full mt-6 bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Login</button>
+      <button type="submit" class="w-full mt-6 bg-blue-600 text-white py-3 rounded-md">Login</button>
     </form>
 
-    <!-- Social Media Sign-In -->
-    <!-- Uncomment this block if you want to add Google login -->
-    <!--
     <div class="mt-6 text-center">
-      <a href="/auth/google" class="w-full bg-red-500 text-white py-3 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500">Sign in with Google</a>
+      <button id="google-signin" class="w-full bg-red-500 text-white py-3 rounded-md">Sign in with Google</button>
     </div>
-    -->
   </div>
 
 <%- include('partials/footer') %>
+
+<script>
+    document.getElementById("login-form").addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) alert(error.message);
+        else window.location.href = "/";
+    });
+
+    document.getElementById("google-signin").addEventListener("click", async function () {
+        await supabase.auth.signInWithOAuth({ provider: "google" });
+    });
+</script>
 </body>

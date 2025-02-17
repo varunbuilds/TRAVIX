@@ -1,61 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
-    <link rel="icon" href="/images/travix-logo-blue.png" type="image/x-icon">
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100">
-
-    <nav class="bg-white shadow-lg fixed top-0 left-0 w-full z-50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <!-- Logo with Text -->
-                <div class="flex items-center">
-                    <!-- Link wrapping the logo and text to redirect to the home page -->
+    <head>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://unpkg.com/@supabase/supabase-js"></script>
+        <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    </head>
+    <body class="bg-gray-100">
+        <nav class="bg-white shadow-lg fixed top-0 left-0 w-full z-50">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex justify-between items-center py-4">
                     <a href="/" class="flex items-center">
                         <img src="/images/travix-logo-blue.png" alt="Travix Logo" class="w-10 h-10 object-contain mr-2">
-                        <div class="text-3xl font-bold text-blue-600">
-                            Travix
-                        </div>
+                        <div class="text-3xl font-bold text-blue-600">Travix</div>
                     </a>
-                </div>
-
-                <!-- Menu for desktop view -->
-                <div class="hidden md:flex space-x-4">
-                    <a href="/flights" class="text-lg font-medium text-gray-700 hover:text-blue-500">Flights</a>
-                    <a href="/hotels" class="text-lg font-medium text-gray-700 hover:text-blue-500">Hotels</a>
-                    <a href="/cars" class="text-lg font-medium text-gray-700 hover:text-blue-500">Cars</a>
-                    <a href="/explore" class="text-lg font-medium text-gray-700 hover:text-blue-500">Explore</a>
-                </div>
-
-                <!-- Login / Signup for mobile and desktop -->
-                <div class="flex items-center space-x-2 md:space-x-4">
-                    <!-- Login/register (visible on all views) -->
-                    <a href="/login" class="text-lg font-medium text-blue-600 hover:text-blue-700 hidden md:block">Login</a>
-                    <a href="/register" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 hidden md:block">Sign Up</a>
-
-                    <!-- Login/register buttons for mobile -->
-                    <a href="/login" class="text-lg font-medium text-blue-500 hover:text-blue-700 md:hidden">Login</a>
-                    <a href="/register" class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 md:hidden">Sign Up</a>
-
-                    <!-- Mobile Menu Icon -->
+    
+                    <div class="hidden md:flex space-x-4">
+                        <a href="/flights" class="text-lg font-medium text-gray-700 hover:text-blue-500">Flights</a>
+                        <a href="/hotels" class="text-lg font-medium text-gray-700 hover:text-blue-500">Hotels</a>
+                        <a href="/cars" class="text-lg font-medium text-gray-700 hover:text-blue-500">Cars</a>
+                        <a href="/explore" class="text-lg font-medium text-gray-700 hover:text-blue-500">Explore</a>
+                    </div>
+    
+                    <!-- User Authentication -->
+                    <div class="relative">
+                        <!-- Login/Signup Buttons -->
+                        <div id="auth-buttons" class="flex space-x-4">
+                            <a id="login-btn" href="/login" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition">Login</a>
+                            <a id="register-btn" href="/register" class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md hover:bg-gray-300 transition">Sign Up</a>
+                        </div>
+    
+                        <!-- Logout Button -->
+                        <button id="logout-btn" class="hidden px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition">
+                            Logout
+                        </button>
+                    </div>
+    
                     <button id="mobile-menu-button" class="text-gray-700 focus:outline-none md:hidden">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>
                 </div>
+    
+                <div id="mobile-menu" class="md:hidden hidden">
+                    <a href="/flights" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Flights</a>
+                    <a href="/hotels" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Hotels</a>
+                    <a href="/cars" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Cars</a>
+                    <a href="/explore" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Explore</a>
+                </div>
             </div>
+        </nav>
+    </body>
+    
+    <script>
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(
+            'https://kfokmdvwireslnpwlhoa.supabase.co', 
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtmb2ttZHZ3aXJlc2xucHdsaG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk0NDA1ODgsImV4cCI6MjA1NTAxNjU4OH0.E0lgWp3_rMoejpAWcK9TLt3Qu5-1YARZ6f2y4YOkLdw'
+        );
+    
+        async function checkUser() {
+            const { data, error } = await supabase.auth.getSession();
+            
+            if (error) {
+                console.error("Error getting session:", error);
+                return;
+            }
+    
+            console.log("Supabase Session:", data);
+    
+            if (data.session && data.session.user) {
+                console.log("User detected:", data.session.user);
 
-            <!-- Mobile Menu -->
-            <div id="mobile-menu" class="md:hidden hidden">
-                <a href="/flights" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Flights</a>
-                <a href="/hotels" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Hotels</a>
-                <a href="/cars" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Cars</a>
-                <a href="/explore" class="block py-2 text-lg text-gray-700 hover:bg-blue-600 hover:text-white">Explore</a>
-            </div>
-        </div>
-    </nav>
+                // Hide login/signup buttons
+                document.getElementById("auth-buttons").classList.add("hidden");
+                
+                // Show logout button
+                document.getElementById("logout-btn").classList.remove("hidden");
+            } else {
+                // Ensure login/signup buttons are visible
+                document.getElementById("auth-buttons").classList.remove("hidden");
+                document.getElementById("logout-btn").classList.add("hidden");
+            }
+        }
+    
+        document.addEventListener("DOMContentLoaded", checkUser);
+    
+        document.getElementById("logout-btn").addEventListener("click", async function () {
+            await supabase.auth.signOut();
+            window.location.reload();
+        });
+    </script>
