@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import express from 'express';
 import session from 'express-session';
+import redis from 'redis';
+import { RedisStore } from 'connect-redis';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -9,22 +11,29 @@ dotenv.config();
 
 const app = express();
 const PORT = 3000;
+const client = redis.createClient();
 
 // Initialize Supabase Client
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-app.use(session({
-  secret: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtmb2ttZHZ3aXJlc2xucHdsaG9hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczOTQ0MDU4OCwiZXhwIjoyMDU1MDE2NTg4fQ.H5ROs_YMGKD8aPhmoV2j2O2r19bHBg4-IY54ejoo16E', // Replace with a secure key
-  resave: false,
-  saveUninitialized: true,
-}));
-
-app.set('view engine', 'ejs');
+// __filename and __dirname workaround for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+app.use(session({
+    store: new RedisStore({ client }),
+    secret: 'your-secret-key',  // Replace with a secure key
+    resave: false,
+    saveUninitialized: true,
+}));
+
+app.set('views', path.join(__dirname, 'views')); // Adjust path as needed
+app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+
 
 // Middleware to check user session
 app.use((req, res, next) => {
