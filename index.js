@@ -23,6 +23,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const requireAuth = async (req, res, next) => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error || !session || !session.user) {
+        return res.redirect('/login'); // Redirect to login if not authenticated
+    }
+
+    req.user = session.user; // Store user info in request
+    next();
+};
+
 // Middleware to check user session
 app.use(async (req, res, next) => {
     const { data: session, error } = await supabase.auth.getSession();
@@ -139,11 +150,16 @@ app.get("/", (req, res) => {
   res.render("index", { title: "Travix - Travel Booking" });
 });
 
-// Flights Route
-app.get('/flights', (req, res) => {
-
-        res.render('flights', { title: 'Search Flights', query: req.query });
+// Cars Route (New)
+app.get('/explore', (req, res) => {
     
+    res.render('explore', { title: 'Search Explore', query: req.query });
+
+
+});
+
+app.get('/flights', (req, res) => {
+    res.render('flights', { title: 'Search Flights', query: req.query });
 });
 
 app.get('/suggestions', async (req, res) => {
@@ -747,6 +763,7 @@ app.get('/cars', (req, res) => {
 
     
 });
+
 
 
 // Start the server

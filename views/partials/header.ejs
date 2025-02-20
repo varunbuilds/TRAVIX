@@ -19,9 +19,9 @@
                     </a>
     
                     <div class="hidden md:flex space-x-4">
-                        <a href="/flights" class="text-lg font-medium text-gray-700 hover:text-blue-500">Flights</a>
+                        <a href="/flights" class="auth-required text-lg font-medium text-gray-700 hover:text-blue-500 hidden">Flights</a>
                         
-                        <a href="/explore" class="text-lg font-medium text-gray-700 hover:text-blue-500">Explore</a>
+                        <a href="/explore" class="auth-required text-lg font-medium text-gray-700 hover:text-blue-500 hidden">Explore</a>
                     </div>
 
                     <!-- User Authentication and Mobile Menu Buttons -->
@@ -63,35 +63,41 @@
         );
     
         async function checkUser() {
-            const { data, error } = await supabase.auth.getSession();
-            
-            if (error) {
-                console.error("Error getting session:", error);
-                return;
-            }
-    
-            console.log("Supabase Session:", data);
-    
-            if (data.session && data.session.user) {
-                console.log("User detected:", data.session.user);
+    const { data, error } = await supabase.auth.getSession();
 
-                // Hide login/signup buttons
-                document.getElementById("auth-buttons").classList.add("hidden");
-                
-                // Show logout button
-                document.getElementById("logout-btn").classList.remove("hidden");
-            } else {
-                // Ensure login/signup buttons are visible
-                document.getElementById("auth-buttons").classList.remove("hidden");
-                document.getElementById("logout-btn").classList.add("hidden");
-            }
-        }
+    if (error) {
+        console.error("Error getting session:", error);
+        return;
+    }
+
+    if (data.session && data.session.user) {
+        document.getElementById("auth-buttons").classList.add("hidden");
+        document.getElementById("logout-btn").classList.remove("hidden");
+        document.querySelectorAll(".auth-required").forEach(el => el.classList.remove("hidden"));
+
+        // Store the token for requests
+        localStorage.setItem("supabase_token", data.session.access_token);
+    } else {
+        document.getElementById("auth-buttons").classList.remove("hidden");
+        document.getElementById("logout-btn").classList.add("hidden");
+        document.querySelectorAll(".auth-required").forEach(el => el.classList.add("hidden"));
+    }
+}
+
+document.addEventListener("DOMContentLoaded", checkUser);    
+document.getElementById("logout-btn").addEventListener("click", async () => {
+    const { error } = await supabase.auth.signOut();
     
-        document.addEventListener("DOMContentLoaded", checkUser);
+    if (error) {
+        console.error("Logout failed:", error.message);
+        return;
+    }
+
+    document.cookie = "sb-access-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "sb-refresh-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     
-        document.getElementById("logout-btn").addEventListener("click", async function () {
-            await supabase.auth.signOut();
-            window.location.reload();
-        });
+    location.href = "/"; // Redirect to home page
+});
     </script>
+    
 </html>
