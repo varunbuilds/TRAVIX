@@ -3,6 +3,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import axios from 'axios';
 
 dotenv.config();
 
@@ -103,6 +104,34 @@ app.get("/logout", async (req, res) => {
   }
 
   res.redirect("/"); // Redirect to home page after logout
+});
+
+// Amadeus Authentication
+let accessToken = '';
+
+// Function to authenticate with Amadeus API
+async function authenticateAmadeus() {
+    const authUrl = 'https://test.api.amadeus.com/v1/security/oauth2/token';
+    try {
+        const response = await axios.post(authUrl, new URLSearchParams({
+            grant_type: 'client_credentials',
+            client_id: process.env.AMADEUS_CLIENT_ID,
+            client_secret: process.env.AMADEUS_CLIENT_SECRET
+        }).toString(), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+        accessToken = response.data.access_token;
+    } catch (error) {
+        console.error('Error authenticating with Amadeus:', error.message);
+    }
+}
+
+// Middleware to ensure Amadeus is authenticated
+app.use(async (req, res, next) => {
+    if (!accessToken) {
+        await authenticateAmadeus();
+    }
+    next();
 });
 
 // **Landing Page**
