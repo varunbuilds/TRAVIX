@@ -1,0 +1,213 @@
+<%- include('partials/header') %>
+
+<div class="max-w-7xl mt-16 mx-auto px-4 py-8 flex">
+    
+    <!-- Sidebar Filter (Sticky) -->
+    <aside class="w-1/4 sticky top-4 bg-white shadow-md p-6 rounded-lg h-fit">
+        <h2 class="text-xl font-semibold mb-4">Filters</h2>
+
+        <!-- Price Filter -->
+        <div class="mb-4">
+            <h3 class="text-lg font-medium">Price</h3>
+            <div class="mt-2 space-y-2">
+                <label class="flex items-center">
+                    <input type="checkbox" class="price-filter" value="0-500000">
+                    <span class="ml-2">$0 - $500,000</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" class="price-filter" value="500000-1000000">
+                    <span class="ml-2">$500,000 - $1,000,000</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" class="price-filter" value="1000000-5000000">
+                    <span class="ml-2">$1,000,000 - $5,000,000</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Type Filter -->
+        <div class="mb-4">
+            <h3 class="text-lg font-medium">Type</h3>
+            <select id="type-filter" class="w-full mt-2 p-2 border rounded">
+                <option value="">All</option>
+                <option value="plane">Plane</option>
+                <option value="helicopter">Helicopter</option>
+            </select>
+        </div>
+
+        <!-- Manufacturer Filter -->
+        <div class="mb-4">
+            <h3 class="text-lg font-medium">Manufacturer</h3>
+            <select id="manufacturer-filter" class="w-full mt-2 p-2 border rounded">
+                <option value="">All</option>
+                <option value="Boeing">Boeing</option>
+                <option value="Airbus">Airbus</option>
+                <option value="Bell">Bell</option>
+                <option value="Cessna">Cessna</option>
+            </select>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="w-3/4 pl-6">
+        <h1 class="text-3xl font-bold mb-6">Explore Planes & Helicopters</h1>
+
+        <div id="items-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <% let aircrafts = [
+                { id: 1, name: "Boeing 747", type: "plane", price: 5000000, manufacturer: "Boeing", img: "/images/boeing747.jpg" },
+                { id: 2, name: "Airbus A380", type: "plane", price: 4500000, manufacturer: "Airbus", img: "/images/airbusa380.jpg" },
+                { id: 3, name: "Bell 407", type: "helicopter", price: 1200000, manufacturer: "Bell", img: "/images/bell407.jpg" },
+                { id: 4, name: "Cessna Citation X", type: "plane", price: 3500000, manufacturer: "Cessna", img: "/images/cessnax.jpg" },
+                { id: 5, name: "Boeing 737", type: "plane", price: 3000000, manufacturer: "Boeing", img: "/images/boeing737.jpg" },
+                { id: 6, name: "Sikorsky S-76", type: "helicopter", price: 2200000, manufacturer: "Sikorsky", img: "/images/sikorskys76.jpg" },
+                { id: 7, name: "Airbus H160", type: "helicopter", price: 1400000, manufacturer: "Airbus", img: "/images/airbush160.jpg" },
+                { id: 8, name: "Bombardier Global 7500", type: "plane", price: 6000000, manufacturer: "Bombardier", img: "/images/global7500.jpg" },
+                { id: 9, name: "Gulfstream G700", type: "plane", price: 7000000, manufacturer: "Gulfstream", img: "/images/gulfstreamg700.jpg" },
+                { id: 10, name: "Robinson R44", type: "helicopter", price: 500000, manufacturer: "Robinson", img: "/images/robinsonr44.jpg" },
+                { id: 11, name: "Leonardo AW139", type: "helicopter", price: 3500000, manufacturer: "Leonardo", img: "/images/leonardoaw139.jpg" },
+                { id: 12, name: "Dassault Falcon 8X", type: "plane", price: 6800000, manufacturer: "Dassault", img: "/images/dassault8x.jpg" }
+            ]; %>
+            
+            <% aircrafts.forEach(item => { %>
+                <div class="bg-white p-4 shadow rounded-lg aircraft-item transition-transform hover:scale-105 hover:shadow-lg" 
+                    data-id="<%= item.id %>" 
+                    data-type="<%= item.type %>" 
+                    data-price="<%= item.price %>" 
+                    data-manufacturer="<%= item.manufacturer %>">
+                    
+                    <img src="<%= item.img %>" alt="<%= item.name %>" class="w-full h-40 object-cover rounded-md">
+                    <h2 class="text-lg font-semibold mt-2"><%= item.name %></h2>
+                    <p class="text-gray-600"><%= item.manufacturer %></p>
+                    <p class="text-blue-600 font-bold">$<%= item.price.toLocaleString() %></p>
+                    
+                    <div class="mt-2">
+                        <button class="add-to-cart px-4 py-2 bg-blue-600 text-white rounded-md w-full transition-all hover:bg-blue-700"
+                            data-id="<%= item.id %>" 
+                            data-name="<%= item.name %>" 
+                            data-price="<%= item.price %>">Add to Cart</button>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</div>
+
+<!-- Cart Icon -->
+<div id="cart-icon" class="fixed bottom-6 right-6 bg-gray-300 text-white p-4 rounded-full shadow-lg cursor-pointer hover:bg-gray-400">
+    🛒
+</div>
+
+<!-- Cart Modal -->
+<div id="cart-modal" class="fixed bottom-16 right-6 bg-white shadow-lg rounded-lg p-4 w-80 hidden">
+    <h2 class="text-lg font-semibold mb-2">Your Cart</h2>
+    <ul id="cart-items" class="mb-2"></ul>
+    <button id="clear-cart" class="w-full px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Clear Cart</button>
+    <button id="checkout" class="w-full mt-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Checkout</button>
+</div>
+
+<script>
+    let cart = [];
+
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function () {
+            const itemId = this.dataset.id;
+            const itemName = this.dataset.name;
+            const itemPrice = this.dataset.price;
+            const card = this.parentElement;
+
+            let cartItem = cart.find(item => item.id === itemId);
+            if (cartItem) {
+                cartItem.qty += 1;
+            } else {
+                cart.push({ id: itemId, name: itemName, price: itemPrice, qty: 1 });
+            }
+
+            updateCart();
+            updateButton(card, itemId);
+        });
+    });
+
+    function updateButton(card, itemId) {
+        let cartItem = cart.find(item => item.id === itemId);
+        if (cartItem) {
+            card.innerHTML = `
+                <div class="flex items-center justify-between border px-3 py-2 rounded-md bg-gray-200">
+                    <button class="decrease-qty px-2 text-lg">-</button>
+                    <span class="text-md">${cartItem.qty}</span>
+                    <button class="increase-qty px-2 text-lg">+</button>
+                </div>
+            `;
+
+            card.querySelector('.increase-qty').addEventListener('click', () => {
+                cartItem.qty += 1;
+                updateCart();
+                updateButton(card, itemId);
+            });
+
+            card.querySelector('.decrease-qty').addEventListener('click', () => {
+                if (cartItem.qty > 1) {
+                    cartItem.qty -= 1;
+                } else {
+                    cart = cart.filter(item => item.id !== itemId);
+                }
+                updateCart();
+                updateButton(card, itemId);
+            });
+        }
+    }
+
+    function updateCart() {
+        const cartItemsContainer = document.getElementById('cart-items');
+        cartItemsContainer.innerHTML = '';
+
+        cart.forEach((item, index) => {
+            cartItemsContainer.innerHTML += `
+                <li class="flex justify-between items-center mb-2">
+                    <span>${item.name} x ${item.qty}</span> 
+                    <span>$${(item.price * item.qty).toLocaleString()}</span>
+                    <button class="text-red-500 remove-item" data-index="${index}">X</button>
+                </li>`;
+        });
+
+        document.querySelectorAll('.remove-item').forEach(button => {
+            button.addEventListener('click', function () {
+                cart.splice(this.dataset.index, 1);
+                updateCart();
+            });
+        });
+    }
+
+    document.getElementById('cart-icon').addEventListener('click', () => {
+        document.getElementById('cart-modal').classList.toggle('hidden');
+    });
+
+    document.getElementById('clear-cart').addEventListener('click', () => {
+        cart = [];
+        updateCart();
+    });
+
+    document.querySelectorAll('.price-filter, #type-filter, #manufacturer-filter').forEach(filter => {
+        filter.addEventListener('change', applyFilters);
+    });
+
+    function applyFilters() {
+        const selectedPrices = [...document.querySelectorAll('.price-filter:checked')].map(cb => cb.value.split('-').map(Number));
+        const selectedType = document.getElementById('type-filter').value;
+        const selectedManufacturer = document.getElementById('manufacturer-filter').value;
+
+        document.querySelectorAll('.aircraft-item').forEach(item => {
+            const price = Number(item.dataset.price);
+            const type = item.dataset.type;
+            const manufacturer = item.dataset.manufacturer;
+
+            const matchesPrice = selectedPrices.length === 0 || selectedPrices.some(([min, max]) => price >= min && price <= max);
+            const matchesType = !selectedType || selectedType === type;
+            const matchesManufacturer = !selectedManufacturer || selectedManufacturer === manufacturer;
+
+            item.style.display = matchesPrice && matchesType && matchesManufacturer ? '' : 'none';
+        });
+    }
+</script>
+
+<%- include('partials/footer') %>
