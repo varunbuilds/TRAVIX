@@ -1,0 +1,80 @@
+<%- include('partials/header') %>
+
+<div class="max-w-5xl mx-auto mt-16 px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Place Order</h1>
+
+    <div class="flex gap-8">
+        <!-- Cart Items -->
+        <div class="w-2/3 bg-white p-6 shadow-md rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Your Cart</h2>
+            <ul id="cart-items-list" class="space-y-4"></ul>
+            <p class="font-semibold text-lg mt-4">Total: $<span id="total-price">0</span></p>
+        </div>
+
+        <!-- Payment Options -->
+        <div class="w-1/3 bg-white p-6 shadow-md rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Payment Options</h2>
+            <select id="payment-method" class="w-full p-2 border rounded mb-4">
+                <option value="netbanking">Net Banking</option>
+                <option value="card">Card Payment</option>
+                <option value="upi">UPI</option>
+            </select>
+
+            <div id="payment-form">
+                <!-- Default: Net Banking -->
+                <input type="text" placeholder="Bank Name" class="w-full p-2 border rounded">
+            </div>
+
+            <button id="place-order" class="w-full mt-4 bg-green-500 text-white py-2 rounded hover:bg-green-600">Place Order</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    function renderCart() {
+        let cartList = document.getElementById("cart-items-list");
+        let totalPrice = 0;
+        cartList.innerHTML = "";
+        
+        cart.forEach(item => {
+            totalPrice += item.price * item.qty;
+            cartList.innerHTML += `
+                <li class="flex justify-between items-center border-b pb-2">
+                    <span>${item.name} x ${item.qty}</span>
+                    <span>$${(item.price * item.qty).toLocaleString()}</span>
+                </li>
+            `;
+        });
+
+        document.getElementById("total-price").innerText = totalPrice.toLocaleString();
+    }
+
+    document.getElementById("payment-method").addEventListener("change", function() {
+        let method = this.value;
+        let paymentForm = document.getElementById("payment-form");
+        paymentForm.innerHTML = "";
+
+        if (method === "netbanking") {
+            paymentForm.innerHTML = `<input type="text" placeholder="Bank Name" class="w-full p-2 border rounded">`;
+        } else if (method === "card") {
+            paymentForm.innerHTML = `
+                <input type="text" placeholder="Card Number" class="w-full p-2 border rounded mb-2">
+                <input type="text" placeholder="Expiry Date" class="w-full p-2 border rounded mb-2">
+                <input type="text" placeholder="CVV" class="w-full p-2 border rounded">
+            `;
+        } else if (method === "upi") {
+            paymentForm.innerHTML = `<input type="text" placeholder="UPI ID" class="w-full p-2 border rounded">`;
+        }
+    });
+
+    document.getElementById("place-order").addEventListener("click", function() {
+        localStorage.removeItem("cart");
+        window.location.href = "/order-success";
+    });
+
+    renderCart();
+</script>
+
+<%- include('partials/footer') %>

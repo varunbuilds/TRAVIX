@@ -11,16 +11,16 @@
             <h3 class="text-lg font-medium">Price</h3>
             <div class="mt-2 space-y-2">
                 <label class="flex items-center">
-                    <input type="checkbox" class="price-filter" value="0-500000">
-                    <span class="ml-2">$0 - $500,000</span>
-                </label>
-                <label class="flex items-center">
-                    <input type="checkbox" class="price-filter" value="500000-1000000">
-                    <span class="ml-2">$500,000 - $1,000,000</span>
+                    <input type="checkbox" class="price-filter" value="0-1000000">
+                    <span class="ml-2">$0 - $1,000,000</span>
                 </label>
                 <label class="flex items-center">
                     <input type="checkbox" class="price-filter" value="1000000-5000000">
                     <span class="ml-2">$1,000,000 - $5,000,000</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" class="price-filter" value="5000000-999999999">
+                    <span class="ml-2">More than $5,000,000</span>
                 </label>
             </div>
         </div>
@@ -106,8 +106,14 @@
     <button id="checkout" class="w-full mt-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Checkout</button>
 </div>
 
+<%- include('partials/footer') %>
+
 <script>
-    let cart = [];
+    let cart = JSON.parse(localStorage.getItem('cart')) || []; // Load cart from localStorage
+
+    document.getElementById('checkout').addEventListener('click', function () {
+        window.location.href = '/place-order'; // Redirect to Place Order page
+    });
 
     document.querySelectorAll('.add-to-cart').forEach(button => {
         button.addEventListener('click', function () {
@@ -148,27 +154,36 @@
             card.querySelector('.decrease-qty').addEventListener('click', () => {
                 if (cartItem.qty > 1) {
                     cartItem.qty -= 1;
+                    updateCart();
+                    updateButton(card, itemId);
                 } else {
                     cart = cart.filter(item => item.id !== itemId);
+                    card.innerHTML = `<button class="add-to-cart px-4 py-2 bg-blue-600 text-white rounded-md w-full transition-all hover:bg-blue-700"
+                        data-id="${itemId}" 
+                        data-name="${cartItem.name}" 
+                        data-price="${cartItem.price}">Add to Cart</button>`;
+                    card.querySelector('.add-to-cart').addEventListener('click', function () {
+                        cart.push({ id: itemId, name: cartItem.name, price: cartItem.price, qty: 1 });
+                        updateCart();
+                        updateButton(card, itemId);
+                    });
                 }
                 updateCart();
-                updateButton(card, itemId);
             });
+            
         }
     }
 
-    function updateCart() {
-        const cartItemsContainer = document.getElementById('cart-items');
-        cartItemsContainer.innerHTML = '';
 
-        cart.forEach((item, index) => {
-            cartItemsContainer.innerHTML += `
-                <li class="flex justify-between items-center mb-2">
-                    <span>${item.name} x ${item.qty}</span> 
-                    <span>$${(item.price * item.qty).toLocaleString()}</span>
-                    <button class="text-red-500 remove-item" data-index="${index}">X</button>
-                </li>`;
-        });
+    function updateCart() {
+        localStorage.setItem('cart', JSON.stringify(cart)); // Save cart in localStorage
+        document.getElementById('cart-items').innerHTML = cart.map((item, index) => `
+            <li class="flex justify-between items-center mb-2">
+                <span>${item.name} x ${item.qty}</span> 
+                <span>$${(item.price * item.qty).toLocaleString()}</span>
+                <button class="text-red-500 remove-item" data-index="${index}">X</button>
+            </li>
+        `).join('');
 
         document.querySelectorAll('.remove-item').forEach(button => {
             button.addEventListener('click', function () {
@@ -177,6 +192,9 @@
             });
         });
     }
+
+    // Load cart when page loads
+    window.addEventListener('DOMContentLoaded', updateCart);
 
     document.getElementById('cart-icon').addEventListener('click', () => {
         document.getElementById('cart-modal').classList.toggle('hidden');
@@ -187,27 +205,30 @@
         updateCart();
     });
 
-    document.querySelectorAll('.price-filter, #type-filter, #manufacturer-filter').forEach(filter => {
-        filter.addEventListener('change', applyFilters);
-    });
-
-    function applyFilters() {
-        const selectedPrices = [...document.querySelectorAll('.price-filter:checked')].map(cb => cb.value.split('-').map(Number));
-        const selectedType = document.getElementById('type-filter').value;
-        const selectedManufacturer = document.getElementById('manufacturer-filter').value;
+     // Filter Logic
+     function applyFilters() {
+        let selectedTypes = document.getElementById("type-filter").value;
+        let selectedManufacturer = document.getElementById("manufacturer-filter").value;
+        let selectedPriceRanges = [...document.querySelectorAll('.price-filter:checked')].map(cb => cb.value);
 
         document.querySelectorAll('.aircraft-item').forEach(item => {
-            const price = Number(item.dataset.price);
-            const type = item.dataset.type;
-            const manufacturer = item.dataset.manufacturer;
+            let type = item.getAttribute("data-type");
+            let manufacturer = item.getAttribute("data-manufacturer");
+            let price = parseInt(item.getAttribute("data-price"));
 
-            const matchesPrice = selectedPrices.length === 0 || selectedPrices.some(([min, max]) => price >= min && price <= max);
-            const matchesType = !selectedType || selectedType === type;
-            const matchesManufacturer = !selectedManufacturer || selectedManufacturer === manufacturer;
+            let typeMatch = selectedTypes === "" || selectedTypes === type;
+            let manufacturerMatch = selectedManufacturer === "" || selectedManufacturer === manufacturer;
+            let priceMatch = selectedPriceRanges.length === 0 || selectedPriceRanges.some(range => {
+                if (range === "5000000") return price > 5000000;
+                let [min, max] = range.split('-').map(Number);
+                return price >= min && price <= max;
+            });
 
-            item.style.display = matchesPrice && matchesType && matchesManufacturer ? '' : 'none';
+            item.style.display = (typeMatch && manufacturerMatch && priceMatch) ? "block" : "none";
         });
     }
-</script>
 
-<%- include('partials/footer') %>
+    document.getElementById("type-filter").addEventListener("change", applyFilters);
+    document.getElementById("manufacturer-filter").addEventListener("change", applyFilters);
+    document.querySelectorAll(".price-filter").forEach(cb => cb.addEventListener("change", applyFilters));
+</script>

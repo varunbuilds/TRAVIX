@@ -139,16 +139,23 @@ app.get("/", (req, res) => {
   res.render("index", { title: "Travix - Travel Booking" });
 });
 
-// Cars Route (New)
+// Explore 
 app.get('/explore', (req, res) => {
-    
     res.render('explore', { title: 'Search Explore', query: req.query });
-
-
 });
+
+
 
 app.get('/flights', (req, res) => {
     res.render('flights', { title: 'Search Flights', query: req.query });
+});
+
+app.get('/place-order', (req, res) => {
+    res.render('place-order', { title: 'Place Order', query: req.query });
+});
+
+app.get('/order-success', (req, res) => {
+    res.render('order-success', { title: 'Order Successful', query: req.query });
 });
 
 app.get('/suggestions', async (req, res) => {
