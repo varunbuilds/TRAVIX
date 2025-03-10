@@ -258,6 +258,7 @@ app.get('/flight-offers', async (req, res) => {
             airlines, // Dynamically fetched airlines
             query: req.query
         });
+        console.log(response.data)
     } catch (error) {
         console.error('Error fetching flight offers:', error.response ? error.response.data : error.message);
         res.status(500).send('Error fetching flight offers');
